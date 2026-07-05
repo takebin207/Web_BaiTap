@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { mockQuestions } from "@/lib/mock-data";
+import { mockQuestions } from "@/data/mock/data";
 import Link from "next/link";
 
 interface PageProps {

@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { tutorStats, recentSubmissions } from "@/lib/mock-data";
+import { tutorStats, recentSubmissions } from "@/data/mock/data";
 
 const container = {
   hidden: { opacity: 0 },

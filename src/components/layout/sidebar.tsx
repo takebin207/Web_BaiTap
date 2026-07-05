@@ -20,7 +20,7 @@ import {
   Repeat,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
-import { currentStudent, currentTutor, type User } from "@/lib/mock-data";
+import { currentStudent, currentTutor, type User } from "@/data/mock/data";
 
 // ============================================================
 // Navigation Items

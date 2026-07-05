@@ -26,7 +26,7 @@ import {
   mockAssignments,
   subjects,
   currentStudent,
-} from "@/lib/mock-data";
+} from "@/data/mock/data";
 import Link from "next/link";
 
 // ============================================================

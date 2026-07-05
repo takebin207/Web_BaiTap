@@ -37,7 +37,7 @@ Bản mẫu hiện tại là một ứng dụng **Next.js 15** sử dụng **Rea
 ## 3. Đánh giá Kiến trúc & Sự phức tạp (Architecture & Design Audit)
 
 ### Kiểm tra Kiến trúc
-* **Hiện trạng thực tế:** Do đang ở giai đoạn Prototype phục vụ UI/UX, toàn bộ mã nguồn tập trung ở tầng **Presentation** (`src/app` và `src/components`). Tầng nghiệp vụ và hạ tầng chỉ được giả lập thông qua mô hình kiểu dữ liệu TypeScript trong `src/lib/mock-data.ts`.
+* **Hiện trạng thực tế:** Do đang ở giai đoạn Prototype phục vụ UI/UX, toàn bộ mã nguồn tập trung ở tầng **Presentation** (`src/app` và `src/components`). Tầng nghiệp vụ và hạ tầng chỉ được giả lập thông qua mô hình kiểu dữ liệu trong tệp `src/data/mock/data.ts`.
 * **Đánh giá:** Thiết kế hiện tại **không bị quá tải (over-engineered)**. Cấu trúc thư mục tối giản, tập trung tối đa vào giao diện trực quan và trải nghiệm người dùng, giúp nhà phát triển dễ dàng cấu trúc lại (refactor) khi tích hợp Backend thực tế ở Giai đoạn 2.
 
 ---

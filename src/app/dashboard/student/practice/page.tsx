@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { mockQuestions, subjects } from "@/lib/mock-data";
+import { mockQuestions, subjects } from "@/data/mock/data";
 import Link from "next/link";
 
 const container = {

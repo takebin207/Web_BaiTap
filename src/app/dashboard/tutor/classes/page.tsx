@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { tutorClasses } from "@/lib/mock-data";
+import { tutorClasses } from "@/data/mock/data";
 
 const container = {
   hidden: { opacity: 0 },

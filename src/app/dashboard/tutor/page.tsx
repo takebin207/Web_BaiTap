@@ -19,7 +19,7 @@ import {
   tutorStats,
   recentSubmissions,
   currentTutor,
-} from "@/lib/mock-data";
+} from "@/data/mock/data";
 import Link from "next/link";
 
 const container = {

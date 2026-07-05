@@ -10,7 +10,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { mockNotifications } from "@/lib/mock-data";
+import { mockNotifications } from "@/data/mock/data";
 import { Badge } from "@/components/ui/badge";
 
 // ============================================================

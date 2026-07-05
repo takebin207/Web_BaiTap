@@ -11,7 +11,7 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { studentStats } from "@/lib/mock-data";
+import { studentStats } from "@/data/mock/data";
 import Link from "next/link";
 
 const container = {
