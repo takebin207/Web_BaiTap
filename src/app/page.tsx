@@ -110,7 +110,7 @@ const testimonials = [
     name: "Nguyễn Thị Lan",
     role: "Học sinh lớp 12 - THPT Chu Văn An",
     content:
-      "Từ khi sử dụng EduAI, điểm Toán của em tăng từ 6.5 lên 8.5. Tính năng AI giải thích giúp em hiểu rõ từng bước giải.",
+      "Từ khi sử dụng EStudy, điểm Toán của em tăng từ 6.5 lên 8.5. Tính năng AI giải thích giúp em hiểu rõ từng bước giải.",
     avatar: "NL",
     rating: 5,
   },
@@ -509,7 +509,7 @@ export default function LandingPage() {
               className="mx-auto mt-4 max-w-2xl text-base"
               style={{ color: 'var(--text-secondary)' }}
             >
-              Từ luyện đề đến phân tích điểm yếu, EduAI cung cấp đầy đủ công cụ
+              Từ luyện đề đến phân tích điểm yếu, EStudy cung cấp đầy đủ công cụ
               giúp bạn chuẩn bị tốt nhất cho kỳ thi THPT Quốc gia.
             </motion.p>
           </motion.div>
@@ -772,7 +772,7 @@ export default function LandingPage() {
               Sẵn sàng đạt điểm cao?
             </h2>
             <p className="relative mx-auto mt-4 max-w-xl text-base text-white/80">
-              Tham gia cùng hàng nghìn học sinh đang sử dụng EduAI để chuẩn bị
+              Tham gia cùng hàng nghìn học sinh đang sử dụng EStudy để chuẩn bị
               cho kỳ thi THPT Quốc gia.
             </p>
             <div className="relative mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -813,7 +813,7 @@ export default function LandingPage() {
               </span>
             </div>
             <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
-              © 2025 EduAI. Nền tảng học tập thông minh cho học sinh Việt Nam.
+              © 2025 EStudy. Nền tảng học tập thông minh cho học sinh Việt Nam.
             </p>
           </div>
         </div>

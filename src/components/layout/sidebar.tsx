@@ -1,55 +1,53 @@
 "use client";
 
-
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Brain,
+  GraduationCap,
   LayoutDashboard,
-  BookOpen,
   ClipboardList,
   Database,
-  BarChart3,
-  User as UserIcon,
-  Settings,
   Users,
   Upload,
   ChevronLeft,
   LogOut,
   Repeat,
+  AlertTriangle,
+  CheckSquare,
+  Sparkles,
+  Settings,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 import { currentStudent, currentTutor, type User } from "@/data/mock/data";
 
 // ============================================================
-// Navigation Items
+// Navigation Items — EStudy
 // ============================================================
-
-const studentNavItems = [
-  { label: "Tổng quan", icon: LayoutDashboard, href: "/dashboard/student" },
-  { label: "Luyện tập", icon: BookOpen, href: "/dashboard/student/practice" },
-  { label: "Bài tập", icon: ClipboardList, href: "/dashboard/student/homework" },
-  { label: "Ngân hàng câu hỏi", icon: Database, href: "/dashboard/student/question-bank" },
-  { label: "Phân tích", icon: BarChart3, href: "/dashboard/student/analytics" },
-  { label: "Hồ sơ", icon: UserIcon, href: "/dashboard/student/profile" },
-  { label: "Cài đặt", icon: Settings, href: "/dashboard/student/settings" },
-];
 
 const tutorNavItems = [
   { label: "Tổng quan", icon: LayoutDashboard, href: "/dashboard/tutor" },
   { label: "Lớp học", icon: Users, href: "/dashboard/tutor/classes" },
+  { label: "Bài tập", icon: ClipboardList, href: "/dashboard/tutor/assignments" },
+  { label: "Kết quả", icon: CheckSquare, href: "/dashboard/tutor/results" },
+  { label: "Câu hỏi sai", icon: AlertTriangle, href: "/dashboard/tutor/wrong-questions" },
   { label: "Ngân hàng câu hỏi", icon: Database, href: "/dashboard/tutor/question-bank" },
-  { label: "Giao bài tập", icon: ClipboardList, href: "/dashboard/tutor/assignments" },
-  { label: "Nhập PDF", icon: Upload, href: "/dashboard/tutor/pdf-import" },
-  { label: "Thống kê", icon: BarChart3, href: "/dashboard/tutor/analytics" },
+  { label: "Trợ lý AI", icon: Sparkles, href: "/dashboard/tutor/ai-review" },
+  { label: "Nhập đề", icon: Upload, href: "/dashboard/tutor/import" },
   { label: "Cài đặt", icon: Settings, href: "/dashboard/tutor/settings" },
+];
+
+const studentNavItems = [
+  { label: "Tổng quan", icon: LayoutDashboard, href: "/dashboard/student" },
+  { label: "Bài tập", icon: ClipboardList, href: "/dashboard/student/assignments" },
+  { label: "Kết quả", icon: CheckSquare, href: "/dashboard/student/results" },
+  { label: "Ôn tập câu sai", icon: AlertTriangle, href: "/dashboard/student/wrong-questions" },
 ];
 
 const adminNavItems = [
   { label: "Tổng quan", icon: LayoutDashboard, href: "/dashboard/admin" },
   { label: "Quản lý câu hỏi", icon: Database, href: "/dashboard/admin/questions" },
-  { label: "Cấu hình AI", icon: Settings, href: "/dashboard/admin/ai-config" },
+  { label: "Cài đặt", icon: Settings, href: "/dashboard/admin/settings" },
 ];
 
 // ============================================================
@@ -67,8 +65,8 @@ export function Sidebar({ role, collapsed = false, onToggleCollapse, className }
   const pathname = usePathname();
   const navItems = role === "student" ? studentNavItems : role === "tutor" ? tutorNavItems : adminNavItems;
   const user: User = role === "student" ? currentStudent : role === "tutor" ? currentTutor : { id: "admin-001", name: "Quản trị viên", email: "admin@gmail.com", role: "admin" };
-  const otherRole = role === "student" ? "tutor" : role === "tutor" ? "admin" : "student";
-  const otherRoleLabel = role === "student" ? "Giáo viên" : role === "tutor" ? "Quản trị" : "Học sinh";
+  const otherRole = role === "student" ? "tutor" : role === "tutor" ? "student" : "tutor";
+  const otherRoleLabel = role === "student" ? "Giáo viên" : role === "tutor" ? "Học sinh" : "Giáo viên";
 
   const isActive = (href: string) => {
     if (href === `/dashboard/${role}`) return pathname === href;
@@ -94,7 +92,7 @@ export function Sidebar({ role, collapsed = false, onToggleCollapse, className }
       >
         <Link href="/" className="flex items-center gap-2.5 overflow-hidden">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg gradient-bg">
-            <Brain className="h-4.5 w-4.5 text-white" />
+            <GraduationCap className="h-4.5 w-4.5 text-white" />
           </div>
           <AnimatePresence>
             {!collapsed && (
@@ -105,7 +103,7 @@ export function Sidebar({ role, collapsed = false, onToggleCollapse, className }
                 className="text-lg font-bold whitespace-nowrap overflow-hidden"
                 style={{ color: "var(--text-primary)" }}
               >
-                Edu<span className="gradient-text">AI</span>
+                E<span className="gradient-text">Study</span>
               </motion.span>
             )}
           </AnimatePresence>

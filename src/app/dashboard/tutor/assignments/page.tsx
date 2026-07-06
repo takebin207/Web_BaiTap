@@ -3,132 +3,176 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import {
+  ClipboardList,
   Plus,
-  Sparkles,
-  Calendar,
-  BookOpen,
-  ChevronRight,
   Search,
+  Calendar,
+  Clock,
+  ChevronRight,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { mockAssignments } from "@/data/mock/data";
+import Link from "next/link";
 
 const container = {
   hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.05 },
-  },
+  visible: { opacity: 1, transition: { staggerChildren: 0.05 } },
 } as const;
 
 const item = {
-  hidden: { opacity: 0, y: 12 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.3, ease: "easeOut" as const },
-  },
+  hidden: { opacity: 0, y: 15 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
 };
 
-export default function AssignmentList() {
+export default function AssignmentsPage() {
+  const [activeTab, setActiveTab] = useState<"all" | "active" | "draft" | "closed" | "graded">("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredAssignments = mockAssignments.filter((a) =>
-    a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    a.className.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "pending":
-        return <Badge variant="secondary" className="text-xs">Chưa làm</Badge>;
-      case "in_progress":
-        return <Badge className="text-xs text-amber-500 bg-amber-500/10 border-amber-500/20">Đang làm</Badge>;
-      case "submitted":
-        return <Badge className="text-xs text-blue-500 bg-blue-500/10 border-blue-500/20">Chờ chấm</Badge>;
-      case "graded":
-        return <Badge className="text-xs text-emerald-500 bg-emerald-500/10 border-emerald-500/20">Đã chấm</Badge>;
-      default:
-        return null;
-    }
-  };
+  const filteredAssignments = mockAssignments.filter((asgn) => {
+    const matchesTab = activeTab === "all" || asgn.status === activeTab;
+    const matchesSearch = asgn.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          asgn.className.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesTab && matchesSearch;
+  });
 
   return (
-    <motion.div
-      variants={container}
-      initial="hidden"
-      animate="visible"
-      className="space-y-6"
-    >
-      {/* Header action */}
-      <motion.div variants={item} className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between">
-        <div
-          className="flex items-center gap-2 rounded-xl px-3 py-2 flex-1 max-w-sm border"
-          style={{ background: "var(--surface-card)", borderColor: "var(--border-default)" }}
-        >
-          <Search className="h-4 w-4 shrink-0" style={{ color: "var(--text-tertiary)" }} />
+    <motion.div variants={container} initial="hidden" animate="visible" className="space-y-6">
+      {/* Page Header */}
+      <motion.div variants={item} className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>
+            Quản lý bài tập
+          </h2>
+          <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
+            Giao bài tập mới, theo dõi tiến độ nộp bài và chấm điểm tự động.
+          </p>
+        </div>
+        <Link href="/dashboard/tutor/assignments/create">
+          <Button size="sm" className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-medium shadow-sm">
+            <Plus className="mr-1.5 h-4 w-4" /> Tạo bài tập mới
+          </Button>
+        </Link>
+      </motion.div>
+
+      {/* Filter Tabs & Search Row */}
+      <motion.div
+        variants={item}
+        className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between p-4 rounded-2xl"
+        style={{ background: "var(--surface-card)", border: "1px solid var(--border-default)" }}
+      >
+        <div className="flex flex-wrap gap-1 bg-[var(--surface-subtle)] p-1 rounded-xl">
+          {(
+            [
+              { id: "all", label: "Tất cả" },
+              { id: "active", label: "Đang mở" },
+              { id: "draft", label: "Bản nháp" },
+              { id: "closed", label: "Đã đóng" },
+              { id: "graded", label: "Đã chấm" },
+            ] as const
+          ).map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-colors ${
+                activeTab === tab.id
+                  ? "bg-white shadow-sm text-indigo-600"
+                  : "text-[var(--text-secondary)] hover:text-indigo-600"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="relative w-full sm:max-w-xs">
+          <Search className="absolute left-3 top-2.5 h-4 w-4" style={{ color: "var(--text-tertiary)" }} />
           <input
             type="text"
-            placeholder="Tìm kiếm bài tập, lớp học..."
+            placeholder="Tìm kiếm bài tập..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-transparent text-sm outline-none placeholder:text-[var(--text-tertiary)]"
+            className="w-full pl-9 pr-4 py-2 text-xs rounded-xl border border-[var(--border-default)] bg-[var(--bg-secondary)]"
             style={{ color: "var(--text-primary)" }}
           />
         </div>
-
-        <div className="flex gap-2">
-          <Button variant="outline" className="rounded-xl border-violet-500/30 text-violet-600 hover:bg-violet-500/5">
-            <Sparkles className="mr-1.5 h-4 w-4 text-violet-500" /> Tạo đề bằng AI
-          </Button>
-          <Button className="rounded-xl gradient-bg text-white border-0 hover:opacity-90 transition-opacity">
-            <Plus className="mr-1.5 h-4 w-4" /> Giao bài mới
-          </Button>
-        </div>
       </motion.div>
 
-      {/* Grid */}
-      <motion.div variants={item} className="grid gap-4">
-        {filteredAssignments.map((asg) => (
+      {/* Assignment Cards list */}
+      <motion.div variants={item} className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {filteredAssignments.map((asgn) => (
           <div
-            key={asg.id}
-            className="rounded-2xl p-5 border flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all card-hover"
-            style={{ background: "var(--surface-card)", borderColor: "var(--border-default)" }}
+            key={asgn.id}
+            className="rounded-2xl p-5 transition-all hover:shadow-md flex flex-col justify-between"
+            style={{
+              background: "var(--surface-card)",
+              border: "1px solid var(--border-default)",
+            }}
           >
-            <div className="flex items-start gap-3.5">
-              <div
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-lg"
-                style={{ background: "oklch(0.58 0.2 260 / 0.1)" }}
-              >
-                📝
+            <div>
+              <div className="flex justify-between items-start gap-2 mb-3">
+                <Badge
+                  className={
+                    asgn.status === "active"
+                      ? "bg-blue-50 text-blue-700 border-blue-100"
+                      : asgn.status === "draft"
+                      ? "bg-gray-50 text-gray-700 border-gray-100"
+                      : asgn.status === "closed"
+                      ? "bg-orange-50 text-orange-700 border-orange-100"
+                      : "bg-green-50 text-green-700 border-green-100"
+                  }
+                >
+                  {asgn.status === "active"
+                    ? "Đang mở"
+                    : asgn.status === "draft"
+                    ? "Bản nháp"
+                    : asgn.status === "closed"
+                    ? "Đã đóng"
+                    : "Đã chấm"}
+                </Badge>
+                <Badge variant="outline" className="text-[10px]">
+                  {asgn.subject}
+                </Badge>
               </div>
-              <div>
-                <h4 className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-                  {asg.title}
-                </h4>
-                <p className="text-xs mt-1" style={{ color: "var(--text-tertiary)" }}>
-                  Lớp: <span className="font-semibold text-[var(--text-secondary)]">{asg.className}</span> • Môn: {asg.subject}
-                </p>
-                <div className="flex flex-wrap items-center gap-3 mt-3.5 text-xs" style={{ color: "var(--text-tertiary)" }}>
-                  <span className="flex items-center gap-1">
-                    <Calendar className="h-3.5 w-3.5" />
-                    Hạn nộp: {new Date(asg.dueDate).toLocaleDateString("vi-VN")}
-                  </span>
-                  <span>•</span>
-                  <span className="flex items-center gap-1">
-                    <BookOpen className="h-3.5 w-3.5" />
-                    {asg.questionCount} câu hỏi
-                  </span>
+
+              <h3 className="text-sm font-semibold mb-1" style={{ color: "var(--text-primary)" }}>
+                {asgn.title}
+              </h3>
+              <p className="text-xs mb-4" style={{ color: "var(--text-tertiary)" }}>
+                Lớp: {asgn.className}
+              </p>
+
+              <div className="space-y-2 mb-5 text-xs" style={{ color: "var(--text-secondary)" }}>
+                <div className="flex items-center gap-2">
+                  <BookOpen className="h-3.5 w-3.5" style={{ color: "var(--text-tertiary)" }} />
+                  <span>{asgn.questionCount} câu hỏi trắc nghiệm</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-3.5 w-3.5" style={{ color: "var(--text-tertiary)" }} />
+                  <span>Thời gian: {asgn.timeLimit} phút</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-3.5 w-3.5" style={{ color: "var(--text-tertiary)" }} />
+                  <span>Hạn nộp: {new Date(asgn.dueDate).toLocaleDateString("vi-VN")}</span>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 sm:self-center self-end">
-              {getStatusBadge(asg.status)}
-              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg">
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+            <div className="border-t border-[var(--border-subtle)] pt-4 flex items-center justify-between">
+              <div className="text-left">
+                <span className="text-[10px] block" style={{ color: "var(--text-tertiary)" }}>
+                  Tiến độ nộp bài
+                </span>
+                <span className="text-xs font-bold" style={{ color: "var(--text-secondary)" }}>
+                  {asgn.submittedCount}/{asgn.totalStudents} học sinh
+                </span>
+              </div>
+              <Link href={`/dashboard/tutor/wrong-questions?asgn=${asgn.id}`}>
+                <Button variant="ghost" size="sm" className="text-xs text-indigo-500 hover:text-indigo-600 gap-1 pr-0">
+                  Phân tích <ChevronRight className="h-3.5 w-3.5" />
+                </Button>
+              </Link>
             </div>
           </div>
         ))}

@@ -1,31 +1,25 @@
-# Nhật ký Thay đổi (Changelog): AI Learning Platform
+# Nhật ký Thay đổi (Changelog): EStudy
 
 Toàn bộ các thay đổi lớn của dự án sẽ được ghi nhận tại tài liệu này.
 
 ---
 
-## [0.1.0] - 2026-07-06
+## [0.2.0] - 2026-07-06
 ### Added
-- **Landing Page (`/`):** Giao diện giới thiệu sản phẩm cao cấp, bảng thống kê và khối kêu gọi hành động (CTA).
-- **Student Flow (`/dashboard/student`):**
-  - Giao diện Tổng quan (Dashboard) hiển thị streak, biểu đồ tiến độ học tập và gợi ý từ AI.
-  * Danh sách luyện tập (`/dashboard/student/practice`) với bộ lọc tìm kiếm và phân loại độ khó.
-  * Chi tiết câu hỏi và làm bài tương tác (`/dashboard/student/practice/[id]`).
-  * Tích hợp giải thích AI và gợi ý câu hỏi tương tự cùng môn học dạng mock.
-  * Giao diện phân tích tiến độ học tập (`/dashboard/student/analytics`).
-- **Tutor Flow (`/dashboard/tutor`):**
-  * Giao diện Tổng quan thống kê bài tập, sĩ số lớp học và tiến trình nộp bài.
-  * Danh sách lớp học và hiển thị mã mời (`/dashboard/tutor/classes`).
-  * Danh sách giao bài tập và giao bài mới bằng AI giả lập (`/dashboard/tutor/assignments`).
-  * Giao diện phân tích kết quả lớp học (`/dashboard/tutor/analytics`).
-- **Admin Flow (`/dashboard/admin`):**
-  * Giao diện Tổng quan giám sát CPU/RAM, API latencies logs.
-  * Giao diện quản lý ngân hàng câu hỏi (`/dashboard/admin/questions`).
-  * Cấu hình tham số AI Prompts và LLM Models (`/dashboard/admin/ai-config`).
-- **Layout & Navigation:** Sidebar đa vai trò (Student, Tutor, Admin) co giãn, Topbar tiêu đề động đồng bộ URL và hộp thoại thông báo giả lập.
-- **Mock Data (`src/lib/mock-data.ts`):** Kho dữ liệu giả lập tiếng Việt hoàn chỉnh cho Toán, Lý, Hóa THPT.
-- **Documentation:** Thêm `docs/project-status.md`, `ROADMAP.md`, và `.env.example`.
+- **Đổi tên thương hiệu:** Toàn bộ dự án được chuyển đổi tên từ EduAI / AI Learning Platform sang **EStudy**.
+- **Định hướng lại sản phẩm:** Chuyển đổi từ nền tảng học tập chung chung sang **Nền tảng giao bài tập và phân tích câu sai thông minh** tập trung hỗ trợ gia sư và giáo viên.
+- **Tái cấu trúc Mock Data (`src/data/mock/data.ts`):** Thiết lập cấu trúc dữ liệu mô phỏng hoàn chỉnh luồng nghiệp vụ EStudy (AssignmentSummary, StudentAttempt, WrongQuestionItem, ImportJob, AIReviewSummary).
+- **Trình tạo Bài tập mới (`/dashboard/tutor/assignments/create`):** Giao diện thêm câu hỏi thủ công, chọn từ ngân hàng đề, cài đặt thời gian, hạn nộp bài.
+- **Phân tích Câu hỏi sai (`/dashboard/tutor/wrong-questions` - Cốt lõi):** Phân tích câu sai theo học sinh, câu bị bỏ qua, câu tốn nhiều thời gian và các chủ đề rỗng kiến thức kèm giáo án đề xuất từ AI.
+- **Trợ lý AI Ôn tập (`/dashboard/tutor/ai-review`):** Mô phỏng giải thích đáp án sai nâng cao, sinh 3 câu tương đương cùng dạng.
+- **Nhập đề thi (`/dashboard/tutor/import`):** Mô phỏng tiến trình AI OCR bóc tách câu hỏi và đáp án từ PDF/Word/Ảnh.
+- **Bảng kết quả (`/dashboard/tutor/results`):** Xem danh sách học sinh nộp bài tập và điểm số.
+- **Làm bài trực tuyến (`/dashboard/student/assignments/[id]`):** Giao diện làm trắc nghiệm tương tác với bộ đếm ngược, bản đồ câu hỏi và chỉ báo lưu tự động.
+- **Kết quả bài làm (`/dashboard/student/assignments/[id]/result`):** Báo cáo điểm số, thống kê chi tiết đúng/sai/skip và thời gian làm từng câu của học sinh.
+- **Ôn tập câu sai (`/dashboard/student/wrong-questions`):** Kho lưu trữ cá nhân để học sinh xem lại đáp án và làm lại câu sai.
+- **Tài liệu mới:** Thêm tài liệu định hướng `docs/product-direction.md` và kiến trúc `docs/architecture.md`.
 
-### Fixed
-- Sửa lỗi React Purity (`react-hooks/purity`) liên quan đến hàm `Math.random()` tại trang chi tiết môn học của học sinh.
-- Dọn dẹp toàn bộ 31 cảnh báo import dư thừa trên ESLint.
+---
+
+## [0.1.0] - 2026-07-06
+- Khởi tạo dự án ban đầu dưới tên EduAI.

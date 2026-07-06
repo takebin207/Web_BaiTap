@@ -1,58 +1,60 @@
-# Báo cáo Trạng thái Dự án: AI Learning Platform Prototype
+# Báo cáo Trạng thái Dự án: EStudy Prototype
 
-Tài liệu này cung cấp thông tin chi tiết về hiện trạng phát triển của bản thử nghiệm cao cấp (high-fidelity prototype) dành cho Nền tảng Học tập hỗ trợ AI (AI Learning Platform).
+Tài liệu này cung cấp thông tin chi tiết về hiện trạng phát triển của bản thử nghiệm giao diện cao cấp (high-fidelity prototype) dành cho hệ thống **EStudy** — Nền tảng giao bài tập và phân tích câu hỏi làm sai hỗ trợ bởi AI.
 
 ---
 
 ## 1. Trạng thái Dự án hiện tại
-Bản mẫu hiện tại là một ứng dụng **Next.js 15** sử dụng **React 19**, **Tailwind CSS v4**, **Framer Motion**, và **shadcn/ui**. Dự án được xây dựng hoàn chỉnh dưới dạng tĩnh (static mock-up) chạy trực tiếp trên Localhost để đánh giá UI/UX và luồng người dùng (User Flows).
+
+Bản mẫu hiện tại là một ứng dụng **Next.js 15** sử dụng **React 19**, **Tailwind CSS v4**, **Framer Motion**, và **shadcn/ui**. Dự án được xây dựng hoàn chỉnh dưới dạng tĩnh (static mock-up) chạy trực tiếp trên Localhost để đánh giá luồng nghiệp vụ ôn tập câu sai.
 
 * **Build & Compile:** Đã vượt qua kiểm tra TypeScript và `next build` thành công.
-* **Linting:** Kết quả `eslint` hiện tại hoàn toàn sạch lỗi, không còn bất kỳ cảnh báo hoặc lỗi type check nào.
+* **Linting:** Kết quả `eslint` hoàn toàn sạch lỗi, không còn bất kỳ cảnh báo hoặc lỗi type check nào.
+* **Đổi tên thương hiệu:** Toàn bộ dự án đã được chuyển đổi thương hiệu từ EduAI sang **EStudy**.
 
 ---
 
 ## 2. Các trang đã triển khai (Implemented Pages)
 
-### 🧑‍🎓 Học sinh (Student Pages)
-* **Tổng quan Học sinh (`/dashboard/student`):** Hiển thị chuỗi ngày học (streak), số câu hỏi đã làm, độ chính xác, biểu đồ cột tuần tự tiến trình học, đề xuất AI, bài tập cần nộp, chủ đề yếu, hoạt động gần đây.
-* **Danh sách luyện tập (`/dashboard/student/practice`):** Cho phép học sinh lựa chọn môn học (Toán, Lý, Hóa) và lọc câu hỏi theo mức độ khó (Dễ, Trung bình, Khó, Cực khó) kèm ô tìm kiếm thời gian thực.
-* **Chi tiết câu hỏi (`/dashboard/student/practice/[id]`):** Giao diện làm bài trắc nghiệm tương tác với lựa chọn câu trả lời trực quan và kiểm tra đáp án đúng/sai tức thời.
-* **Giải thích AI & Câu hỏi tương tự:** Tích hợp trực tiếp tại trang chi tiết câu hỏi; hiển thị lời giải từng bước của AI và gợi ý danh sách câu hỏi ôn tập tương tự.
-* **Phân tích Học tập (`/dashboard/student/analytics`):** Trực quan hóa độ chính xác theo từng môn, lịch sử ôn tập và biểu đồ lỗ hổng kiến thức cần cải thiện.
-
 ### 👨‍🏫 Giáo viên (Tutor Pages)
-* **Tổng quan Giáo viên (`/dashboard/tutor`):** Quản lý nhanh số học sinh, lớp học, điểm trung bình lớp và danh sách bài nộp mới nhất của học sinh.
+* **Tổng quan Giáo viên (`/dashboard/tutor`):** Dashboard hiển thị lớp học, số học sinh, danh sách bài tập đang diễn ra, danh sách học sinh chưa nộp bài, các bài nộp gần đây, top câu hỏi học sinh sai nhiều nhất và thẻ gợi ý ôn tập nhanh từ AI.
 * **Danh sách Lớp học (`/dashboard/tutor/classes`):** Hiển thị danh sách các lớp học hiện tại, sĩ số học sinh, điểm trung bình lớp và chức năng sao chép mã mời học sinh.
-* **Danh sách Bài tập (`/dashboard/tutor/assignments`):** Quản lý các bài tập đã giao, số lượng câu hỏi, trạng thái chấm điểm và hạn nộp bài.
-* **Thống kê Lớp học (`/dashboard/tutor/analytics`):** Thống kê số lượng bài nộp trong tuần, hiệu suất điểm số của từng lớp học.
+* **Quản lý Bài tập (`/dashboard/tutor/assignments`):** Quản lý bài tập theo trạng thái tab (Tất cả, Đang mở, Bản nháp, Đã đóng, Đã chấm), số lượng câu hỏi, thời gian làm và hạn nộp bài.
+* **Trình tạo Bài tập mới (`/dashboard/tutor/assignments/create`):** Biểu mẫu thiết lập tiêu đề, môn học, thời gian làm, lớp nhận bài, hạn nộp, công tắc bật/tắt hiển thị lời giải và chọn nhanh câu hỏi từ ngân hàng hoặc thêm thủ công.
+* **Bảng kết quả (`/dashboard/tutor/results`):** Xem chi tiết điểm số của học sinh và bấm chấm điểm giả lập.
+* **Phân tích câu hỏi sai (`/dashboard/tutor/wrong-questions` - Cốt lõi):** Phân tích câu sai theo học sinh, câu bị bỏ qua, câu mất quá nhiều thời gian làm và các chủ đề rỗng kiến thức kèm giáo án ôn tập buổi sau từ AI.
+* **Ngân hàng câu hỏi (`/dashboard/tutor/question-bank`):** Bộ lưu trữ câu hỏi được phân loại theo bộ môn, khối, chương học và trạng thái duyệt (`READY`, `DRAFT`, `NEEDS_REVIEW`, `ERROR`).
+* **Trợ lý AI ôn tập (`/dashboard/tutor/ai-review`):** Giao diện giải thích câu sai, tạo 3 câu tương đương và gợi ý giáo án buổi học sau từ AI.
+* **Nhập đề thi (`/dashboard/tutor/import`):** Mô phỏng tải lên tệp đề bài & đáp án (PDF, Word, Ảnh), tiến trình OCR bóc tách và khớp đáp án tự động từ AI.
 
-### 🛡️ Quản trị viên (Admin Pages)
-* **Tổng quan Admin (`/dashboard/admin`):** Theo dõi số lượng câu hỏi hệ thống, người dùng hoạt động, số lượt gọi API AI, hiệu năng CPU/RAM và nhật ký truy cập API.
-* **Quản lý câu hỏi (`/dashboard/admin/questions`):** Danh sách toàn bộ ngân hàng câu hỏi, hỗ trợ bộ lọc và mô phỏng các hành động thêm, sửa, xóa câu hỏi.
-* **Cấu hình AI (`/dashboard/admin/ai-config`):** Mô phỏng trang điều chỉnh tham số mô hình LLM (Gemini 1.5 Pro / Flash), tinh chỉnh tham số độ sáng tạo (Temperature) và viết System Prompt chỉ thị cho AI.
+### 🧑‍🎓 Học sinh (Student Pages)
+* **Tổng quan Học sinh (`/dashboard/student`):** Hiển thị số bài tập chưa làm, lịch sử điểm số, thống kê số câu làm sai lưu trữ và lời khuyên học tập từ AI.
+* **Bài tập của tôi (`/dashboard/student/assignments`):** Danh sách bài tập giáo viên giao kèm trạng thái làm bài (Chưa làm, Đã nộp, Đã chấm).
+* **Làm bài trực tuyến (`/dashboard/student/assignments/[id]`):** Giao diện làm trắc nghiệm tương tác với bộ đếm ngược thời gian, chỉ báo lưu tự động và bản đồ câu hỏi.
+* **Kết quả bài làm (`/dashboard/student/assignments/[id]/result`):** Điểm số đạt được, thống kê đúng/sai/skip, thời gian làm bài chi tiết và xem lời giải thích chi tiết của giáo viên / AI.
+* **Ôn tập câu làm sai (`/dashboard/student/wrong-questions`):** Kho lưu trữ các câu hỏi trắc nghiệm đã làm sai, cho phép xem lời giải AI giải thích chi tiết và bấm "Luyện câu tương tự".
 
 ---
 
-## 3. Đánh giá Kiến trúc & Sự phức tạp (Architecture & Design Audit)
+## 3. Đánh giá Kiến trúc (Architecture Audit)
 
-### Kiểm tra Kiến trúc
-* **Hiện trạng thực tế:** Do đang ở giai đoạn Prototype phục vụ UI/UX, toàn bộ mã nguồn tập trung ở tầng **Presentation** (`src/app` và `src/components`). Tầng nghiệp vụ và hạ tầng chỉ được giả lập thông qua mô hình kiểu dữ liệu trong tệp `src/data/mock/data.ts`.
-* **Đánh giá:** Thiết kế hiện tại **không bị quá tải (over-engineered)**. Cấu trúc thư mục tối giản, tập trung tối đa vào giao diện trực quan và trải nghiệm người dùng, giúp nhà phát triển dễ dàng cấu trúc lại (refactor) khi tích hợp Backend thực tế ở Giai đoạn 2.
+* **Hiện trạng thực tế:** Toàn bộ mã nguồn tập trung ở tầng **Presentation** (`src/app` và `src/components`). Tầng nghiệp vụ và hạ tầng được giả lập thông qua tệp dữ liệu Mock Data tại `src/data/mock/data.ts`.
+* **Đánh giá:** Giao diện được tối ưu hóa tối đa cho nghiệp vụ giao bài và rà soát lỗi sai của học sinh. Sẵn sàng tích hợp PostgreSQL, Prisma và Gemini API ở giai đoạn tiếp theo.
 
 ---
 
-## 4. Các tính năng chưa triển khai (Missing Backend / DB / Auth / AI)
+## 4. Các tính năng chưa triển khai ở Giai đoạn 1
 
 Đây là các thành phần **tuyệt đối KHÔNG** được xây dựng trong giai đoạn này để tránh lãng phí nguồn lực:
-* **Hệ thống xác thực (Authentication):** Chưa tích hợp Auth.js hoặc JWT. Việc đăng nhập hiện tại chỉ là chuyển hướng trang đơn thuần.
-* **Cơ sở dữ liệu (Database):** Chưa có Prisma ORM, PostgreSQL hoặc MongoDB.
-* **Tích hợp Trí tuệ nhân tạo (AI Engine):** Chưa kết nối API Gemini/OpenAI để sinh lời giải hoặc phân tích văn bản PDF.
-* **Xử lý PDF (PDF Processor):** Chưa có thư viện OCR hoặc API phân tích tài liệu để tự động chuyển PDF thành câu hỏi trắc nghiệm.
+* **Hệ thống xác thực (Authentication):** Đăng nhập hiện tại chỉ là chuyển hướng trang đơn thuần.
+* **Cơ sở dữ liệu (Database):** Chưa kết nối PostgreSQL thực tế.
+* **Tích hợp Gemini API:** Chưa gọi API thực tế.
+* **Xử lý OCR PDF/Word:** Chưa tích hợp Vision API hoặc Document AI.
 
 ---
 
-## 5. Kế hoạch hành động cho Sprint tiếp theo (Next Sprint)
+## 5. Kế hoạch hành động cho Giai đoạn 2
 
 1. Thiết lập **Prisma ORM** và kết nối tới database **PostgreSQL**.
-2. Triển khai **Auth.js** phục vụ xác thực người dùng và phân quyền tài khoản (Học sinh, Giáo viên, Quản trị viên).
+2. Thiết lập **Auth.js** và phân quyền truy cập.
+3. Thiết lập kết nối **Gemini API** để giải thích câu sai trực tiếp.

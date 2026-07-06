@@ -19,22 +19,23 @@ import { Badge } from "@/components/ui/badge";
 
 const pageTitles: Record<string, string> = {
   "/dashboard/student": "Tổng quan",
+  "/dashboard/student/assignments": "Bài tập của tôi",
+  "/dashboard/student/results": "Kết quả",
+  "/dashboard/student/wrong-questions": "Ôn tập câu sai",
   "/dashboard/student/practice": "Luyện tập",
-  "/dashboard/student/homework": "Bài tập",
-  "/dashboard/student/question-bank": "Ngân hàng câu hỏi",
   "/dashboard/student/analytics": "Phân tích học tập",
-  "/dashboard/student/profile": "Hồ sơ",
-  "/dashboard/student/settings": "Cài đặt",
   "/dashboard/tutor": "Tổng quan",
   "/dashboard/tutor/classes": "Lớp học",
+  "/dashboard/tutor/assignments": "Bài tập",
+  "/dashboard/tutor/results": "Kết quả",
+  "/dashboard/tutor/wrong-questions": "Câu hỏi sai",
   "/dashboard/tutor/question-bank": "Ngân hàng câu hỏi",
-  "/dashboard/tutor/assignments": "Giao bài tập",
-  "/dashboard/tutor/pdf-import": "Nhập PDF",
-  "/dashboard/tutor/analytics": "Thống kê",
+  "/dashboard/tutor/ai-review": "Trợ lý AI",
+  "/dashboard/tutor/import": "Nhập đề",
   "/dashboard/tutor/settings": "Cài đặt",
   "/dashboard/admin": "Tổng quan Admin",
   "/dashboard/admin/questions": "Quản lý câu hỏi",
-  "/dashboard/admin/ai-config": "Cấu hình AI",
+  "/dashboard/admin/settings": "Cài đặt",
 };
 
 // ============================================================
@@ -187,7 +188,7 @@ export function Topbar({ onMenuClick, isMobileMenuOpen }: TopbarProps) {
                         className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm"
                         style={{
                           background:
-                            notif.type === "homework"
+                            notif.type === "assignment"
                               ? "oklch(0.58 0.2 260 / 0.1)"
                               : notif.type === "warning"
                               ? "oklch(0.8 0.15 80 / 0.1)"
@@ -196,7 +197,7 @@ export function Topbar({ onMenuClick, isMobileMenuOpen }: TopbarProps) {
                               : "oklch(0.7 0.15 240 / 0.1)",
                         }}
                       >
-                        {notif.type === "homework"
+                        {notif.type === "assignment"
                           ? "📝"
                           : notif.type === "warning"
                           ? "⚠️"

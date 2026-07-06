@@ -10,18 +10,19 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "EduAI - Nền tảng học tập thông minh",
+  title: "EStudy - Giao bài tập & Phân tích câu sai bằng AI",
   description:
-    "Nền tảng học tập AI dành cho học sinh THPT Việt Nam. Luyện thi, ôn tập, và nâng cao kiến thức với sự hỗ trợ của trí tuệ nhân tạo.",
+    "EStudy là nền tảng giao bài tập và ôn tập câu hỏi sai thông minh dành cho gia sư và giáo viên. Theo dõi học tập, chấm điểm tự động và nhận phân tích bài học tiếp theo từ AI.",
   keywords: [
-    "học tập",
-    "AI",
-    "THPT",
-    "luyện thi",
+    "EStudy",
+    "giao bài tập",
+    "phân tích câu sai",
+    "gia sư",
+    "giáo viên",
     "toán",
     "vật lý",
     "hóa học",
-    "Việt Nam",
+    "AI review",
   ],
 };
 
