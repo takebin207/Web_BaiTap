@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { questionBank, studentAttempts } from "@/data/mock/data";
+import MathRenderer from "@/components/ui/math-renderer";
 
 const container = {
   hidden: { opacity: 0 },
@@ -142,32 +143,32 @@ export default function StudentWrongQuestionsPage() {
                 </div>
 
                 {/* Content */}
-                <p className="text-xs font-medium mb-3.5 leading-relaxed text-left" style={{ color: "var(--text-primary)" }}>
-                  {question.content}
-                </p>
+                <div className="text-xs font-medium mb-3.5 leading-relaxed text-left" style={{ color: "var(--text-primary)" }}>
+                  <MathRenderer text={question.content} />
+                </div>
 
                 {/* Option comparison */}
                 {question.questionType === "multiple_choice" ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs mb-4">
                     <div className="p-3 rounded-xl border border-red-200 bg-red-50/30 text-red-800">
                       <span className="font-bold mr-1 block text-[10px] uppercase text-red-500">Bạn đã chọn:</span>
-                      <span className="font-semibold">{selectedOpt?.label}.</span> {selectedOpt?.content || "Trống"}
+                      <span className="font-semibold">{selectedOpt?.label}.</span> <MathRenderer text={selectedOpt?.content || "Trống"} />
                     </div>
 
                     <div className="p-3 rounded-xl border border-green-200 bg-green-50/30 text-green-800">
                       <span className="font-bold mr-1 block text-[10px] uppercase text-green-500">Đáp án đúng:</span>
-                      <span className="font-semibold">{correctOpt?.label}.</span> {correctOpt?.content}
+                      <span className="font-semibold">{correctOpt?.label}.</span> <MathRenderer text={correctOpt?.content || ""} />
                     </div>
                   </div>
                 ) : (
                   <div className="space-y-1 mb-4 text-xs">
                     <div className="p-3 rounded-xl border border-red-200 bg-red-50/30 text-red-800">
                       <span className="font-bold mr-1 block text-[10px] uppercase text-red-500">Bạn đã điền:</span>
-                      {selectedAnswer || "Bỏ qua"}
+                      <MathRenderer text={selectedAnswer || "Bỏ qua"} />
                     </div>
                     <div className="p-3 rounded-xl border border-green-200 bg-green-50/30 text-green-800">
                       <span className="font-bold mr-1 block text-[10px] uppercase text-green-500">Đáp án chính xác:</span>
-                      {question.correctAnswer}
+                      <MathRenderer text={question.correctAnswer} />
                     </div>
                   </div>
                 )}
@@ -203,7 +204,7 @@ export default function StudentWrongQuestionsPage() {
                       <div className="p-3.5 rounded-xl bg-green-50/50 border border-green-150/50">
                         <p className="font-bold text-green-700 mb-1">Lời giải chi tiết:</p>
                         <p className="whitespace-pre-line text-green-900 leading-relaxed">
-                          {question.explanation}
+                          <MathRenderer text={question.explanation} />
                         </p>
                       </div>
 
@@ -213,7 +214,7 @@ export default function StudentWrongQuestionsPage() {
                             <Sparkles className="h-3.5 w-3.5" /> Trợ lý AI gợi ý:
                           </p>
                           <p className="whitespace-pre-line leading-relaxed">
-                            {question.aiExplanation}
+                            <MathRenderer text={question.aiExplanation} />
                           </p>
                         </div>
                       )}

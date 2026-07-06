@@ -24,6 +24,7 @@ import {
   sampleChapters,
   sampleTopics,
 } from "@/data/mock/data";
+import MathRenderer from "@/components/ui/math-renderer";
 
 const container = {
   hidden: { opacity: 0 },
@@ -459,7 +460,7 @@ export default function QuestionBankPage() {
                         className="text-xs font-medium cursor-pointer leading-relaxed text-left"
                         style={{ color: "var(--text-primary)" }}
                       >
-                        {q.content}
+                        <MathRenderer text={q.content} />
                       </p>
 
                       <AnimatePresence>
@@ -483,7 +484,7 @@ export default function QuestionBankPage() {
                                     }`}
                                   >
                                     <span className="font-bold mr-1.5">{opt.label}.</span>
-                                    {opt.content}
+                                    <MathRenderer text={opt.content} />
                                   </div>
                                 ))}
                               </div>
@@ -492,7 +493,7 @@ export default function QuestionBankPage() {
                             {/* Short Answer exact solution */}
                             {q.questionType === "short_answer" && (
                               <div className="p-3.5 rounded-xl border border-green-200 bg-green-50/40 text-green-800">
-                                <strong>Đáp án chính xác:</strong> {q.correctAnswer}
+                                <strong>Đáp án chính xác:</strong> <MathRenderer text={q.correctAnswer} />
                               </div>
                             )}
 
@@ -500,7 +501,7 @@ export default function QuestionBankPage() {
                             <div className="p-3.5 rounded-xl bg-[var(--surface-subtle)] space-y-1.5">
                               <p className="font-semibold text-emerald-600">Lời giải chi tiết:</p>
                               <p className="whitespace-pre-line text-[var(--text-secondary)] leading-relaxed">
-                                {q.explanation}
+                                <MathRenderer text={q.explanation} />
                               </p>
                             </div>
 
@@ -510,7 +511,7 @@ export default function QuestionBankPage() {
                                   <Sparkles className="h-3.5 w-3.5 animate-pulse" /> Trợ lý AI gợi ý:
                                 </p>
                                 <p className="whitespace-pre-line text-indigo-950 leading-relaxed">
-                                  {q.aiExplanation}
+                                  <MathRenderer text={q.aiExplanation} />
                                 </p>
                               </div>
                             )}

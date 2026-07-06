@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { mockAssignments, questionBank } from "@/data/mock/data";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import MathRenderer from "@/components/ui/math-renderer";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -140,9 +141,9 @@ export default function StudentPracticeSessionPage({ params }: PageProps) {
             </div>
 
             {/* Question Content */}
-            <p className="text-sm font-semibold leading-relaxed text-left" style={{ color: "var(--text-primary)" }}>
-              {activeQuestion.content}
-            </p>
+            <div className="text-sm font-semibold leading-relaxed text-left" style={{ color: "var(--text-primary)" }}>
+              <MathRenderer text={activeQuestion.content} />
+            </div>
 
             {/* Multiple Choice Options or short answer */}
             {activeQuestion.questionType === "multiple_choice" && activeQuestion.options ? (
@@ -168,7 +169,7 @@ export default function StudentPracticeSessionPage({ params }: PageProps) {
                       >
                         {opt.label}
                       </span>
-                      <span className="flex-1">{opt.content}</span>
+                      <span className="flex-1"><MathRenderer text={opt.content} /></span>
                     </button>
                   );
                 })}

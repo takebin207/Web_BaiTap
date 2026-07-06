@@ -24,6 +24,7 @@ import {
   aiReviewSummaries,
   sampleChapters,
 } from "@/data/mock/data";
+import MathRenderer from "@/components/ui/math-renderer";
 import Link from "next/link";
 
 const container = {
@@ -181,9 +182,9 @@ export default function TutorDashboard() {
                       {item.question.difficulty.toUpperCase()}
                     </Badge>
                   </div>
-                  <p className="text-sm line-clamp-2" style={{ color: "var(--text-primary)" }}>
-                    {item.question.content}
-                  </p>
+                  <div className="text-sm line-clamp-2 text-left" style={{ color: "var(--text-primary)" }}>
+                    <MathRenderer text={item.question.content} />
+                  </div>
                   <div className="mt-3 flex items-center justify-between text-xs" style={{ color: "var(--text-tertiary)" }}>
                     <span>{sampleChapters.find(c => c.id === item.question.chapterId)?.name || item.question.chapterId}</span>
                     <span>Số học sinh sai: {item.wrongCount}/{item.totalAttempts}</span>

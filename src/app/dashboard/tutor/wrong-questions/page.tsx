@@ -22,6 +22,7 @@ import {
   sampleChapters,
   sampleTopics,
 } from "@/data/mock/data";
+import MathRenderer from "@/components/ui/math-renderer";
 
 const container = {
   hidden: { opacity: 0 },
@@ -204,9 +205,9 @@ export default function WrongQuestionsPage() {
                     </div>
 
                     {/* Content */}
-                    <p className="text-xs font-semibold mb-3 text-left" style={{ color: "var(--text-primary)" }}>
-                      {wq.question.content}
-                    </p>
+                    <div className="text-xs font-semibold mb-3 text-left" style={{ color: "var(--text-primary)" }}>
+                      <MathRenderer text={wq.question.content} />
+                    </div>
 
                     {/* Options if MC */}
                     {wq.question.questionType === "multiple_choice" && wq.question.options && (
@@ -220,7 +221,7 @@ export default function WrongQuestionsPage() {
                                 : "border-[var(--border-subtle)] bg-white"
                             }`}
                           >
-                            <span className="font-bold mr-1">{opt.label}.</span> {opt.content}
+                            <span className="font-bold mr-1">{opt.label}.</span> <MathRenderer text={opt.content} />
                           </div>
                         ))}
                       </div>
@@ -264,9 +265,7 @@ export default function WrongQuestionsPage() {
                               <p className="font-bold text-indigo-600 mb-1 flex items-center gap-1">
                                 <Sparkles className="h-3.5 w-3.5" /> Phân tích lời giải AI:
                               </p>
-                              <p className="whitespace-pre-line leading-relaxed text-indigo-900">
-                                {wq.question.aiExplanation}
-                              </p>
+                              <p className="whitespace-pre-line leading-relaxed text-indigo-950"><MathRenderer text={wq.question.aiExplanation} /></p>
                             </div>
                           )}
                         </motion.div>
@@ -312,7 +311,7 @@ export default function WrongQuestionsPage() {
                       <Badge className="bg-amber-50 text-amber-700 border-amber-100">{wq.skippedCount} học sinh skip</Badge>
                       <span style={{ color: "var(--text-tertiary)" }}>ID: {wq.question.id}</span>
                     </div>
-                    <p className="font-medium" style={{ color: "var(--text-primary)" }}>{wq.question.content}</p>
+                    <div className="font-medium text-left" style={{ color: "var(--text-primary)" }}><MathRenderer text={wq.question.content} /></div>
                   </div>
                 ))}
               </TabsContent>
@@ -325,7 +324,7 @@ export default function WrongQuestionsPage() {
                       <span className="font-bold text-amber-600">Thời gian làm trung bình: {wq.avgTimeSpent}s</span>
                       <Badge variant="outline" className="text-red-500 border-red-150">Sai {wq.wrongRate}%</Badge>
                     </div>
-                    <p className="font-medium" style={{ color: "var(--text-primary)" }}>{wq.question.content}</p>
+                    <div className="font-medium text-left" style={{ color: "var(--text-primary)" }}><MathRenderer text={wq.question.content} /></div>
                   </div>
                 ))}
               </TabsContent>

@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { wrongQuestionItems, aiReviewSummaries } from "@/data/mock/data";
+import MathRenderer from "@/components/ui/math-renderer";
 
 const container = {
   hidden: { opacity: 0 },
@@ -113,7 +114,7 @@ export default function AIReviewAssistantPage() {
               <div className="space-y-3.5 pt-1 text-xs">
                 <div className="p-3.5 rounded-xl bg-[var(--surface-subtle)]">
                   <p className="font-semibold mb-1" style={{ color: "var(--text-secondary)" }}>Câu hỏi:</p>
-                  <p style={{ color: "var(--text-primary)" }}>{activeWq.question.content}</p>
+                  <div style={{ color: "var(--text-primary)" }}><MathRenderer text={activeWq.question.content} /></div>
                 </div>
 
                 {activeWq.question.aiExplanation ? (
@@ -122,7 +123,7 @@ export default function AIReviewAssistantPage() {
                       <Sparkles className="h-3.5 w-3.5 animate-pulse" /> Trợ lý AI gợi ý:
                     </p>
                     <p className="whitespace-pre-line text-indigo-900 leading-relaxed">
-                      {activeWq.question.aiExplanation}
+                      <MathRenderer text={activeWq.question.aiExplanation} />
                     </p>
                   </div>
                 ) : (
@@ -178,13 +179,11 @@ export default function AIReviewAssistantPage() {
                       key={sIdx}
                       className="p-3.5 rounded-xl border border-dashed border-indigo-250 bg-[var(--surface-subtle)]"
                     >
-                      <p className="font-semibold mb-2" style={{ color: "var(--text-primary)" }}>
-                        {sq.content}
-                      </p>
+                      <div style={{ color: "var(--text-primary)" }}><MathRenderer text={sq.content} /></div>
                       <div className="grid grid-cols-2 gap-2">
                         {sq.options.map((opt, oIdx) => (
                           <div key={oIdx} className="p-1.5 rounded-lg border border-[var(--border-subtle)] bg-white text-[var(--text-secondary)]">
-                            {opt}
+                            <MathRenderer text={opt} />
                           </div>
                         ))}
                       </div>
@@ -261,7 +260,7 @@ export default function AIReviewAssistantPage() {
                   <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-indigo-50 text-indigo-600 font-bold mt-0.5">
                     {idx + 1}
                   </div>
-                  <span style={{ color: "var(--text-secondary)" }}>{sug}</span>
+                  <span style={{ color: "var(--text-secondary)" }}><MathRenderer text={sug} /></span>
                 </div>
               ))}
             </div>

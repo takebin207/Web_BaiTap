@@ -192,7 +192,7 @@ export default function StudentDashboard() {
               </span>
             </div>
             <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-              Dựa trên kết quả bài tập gần nhất, bạn có điểm yếu ở chủ đề <strong>Logarit</strong> và <strong>Hình học không gian</strong>. Hãy bấm ôn tập câu sai để AI hướng dẫn giải lại chi tiết.
+              Dựa trên kết quả bài tập gần nhất, bạn có điểm yếu ở chủ đề <strong>Hàm số bậc hai</strong> và <strong>Vectơ</strong>. Hãy bấm ôn tập câu sai để AI hướng dẫn giải lại chi tiết.
             </p>
             <Link href="/dashboard/student/wrong-questions">
               <Button size="sm" variant="ghost" className="mt-3.5 text-xs text-indigo-500 hover:text-indigo-600 font-semibold p-0">

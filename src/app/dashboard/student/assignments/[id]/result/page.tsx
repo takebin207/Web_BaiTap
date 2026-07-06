@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { mockAssignments, questionBank, studentAttempts } from "@/data/mock/data";
 import Link from "next/link";
+import MathRenderer from "@/components/ui/math-renderer";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -164,9 +165,9 @@ export default function StudentResultPage({ params }: PageProps) {
                   </span>
                 </div>
 
-                <p className="text-xs font-semibold leading-relaxed mb-3.5 text-left" style={{ color: "var(--text-primary)" }}>
-                  {q.content}
-                </p>
+                <div className="text-xs font-semibold leading-relaxed mb-3.5 text-left" style={{ color: "var(--text-primary)" }}>
+                  <MathRenderer text={q.content} />
+                </div>
 
                 {/* Answers list */}
                 {q.questionType === "multiple_choice" && q.options ? (
@@ -185,7 +186,7 @@ export default function StudentResultPage({ params }: PageProps) {
                       return (
                         <div key={opt.id} className={`p-2 rounded-xl border flex items-center gap-2 ${borderStyle}`}>
                           <span className="font-bold">{opt.label}.</span>
-                          <span>{opt.content}</span>
+                          <span><MathRenderer text={opt.content} /></span>
                         </div>
                       );
                     })}
@@ -193,11 +194,11 @@ export default function StudentResultPage({ params }: PageProps) {
                 ) : (
                   <div className="space-y-1 mb-3 text-xs">
                     <div className="p-2.5 rounded-xl border border-green-200 bg-green-50/30 text-green-800">
-                      <strong>Đáp án đúng:</strong> {q.correctAnswer}
+                      <strong>Đáp án đúng:</strong> <MathRenderer text={q.correctAnswer} />
                     </div>
                     {!isCorrect && studentAns && (
                       <div className="p-2.5 rounded-xl border border-red-200 bg-red-50/30 text-red-850 mt-1">
-                        <strong>Đáp án bạn điền:</strong> {studentAns.selectedAnswer || "Bỏ qua"}
+                        <strong>Đáp án bạn điền:</strong> <MathRenderer text={studentAns.selectedAnswer || "Bỏ qua"} />
                       </div>
                     )}
                   </div>
@@ -222,7 +223,7 @@ export default function StudentResultPage({ params }: PageProps) {
                     >
                       <div className="p-3.5 rounded-xl bg-green-50/50 border border-green-150/50">
                         <p className="font-bold text-green-700 mb-1">Lời giải của giáo viên:</p>
-                        <p className="whitespace-pre-line text-green-900 leading-relaxed">{q.explanation}</p>
+                        <p className="whitespace-pre-line text-green-900 leading-relaxed"><MathRenderer text={q.explanation} /></p>
                       </div>
 
                       {q.aiExplanation && (
@@ -230,7 +231,7 @@ export default function StudentResultPage({ params }: PageProps) {
                           <p className="font-bold text-indigo-600 mb-1 flex items-center gap-1">
                             <Sparkles className="h-3.5 w-3.5" /> Trợ lý AI phân tích:
                           </p>
-                          <p className="whitespace-pre-line leading-relaxed">{q.aiExplanation}</p>
+                          <p className="whitespace-pre-line leading-relaxed"><MathRenderer text={q.aiExplanation} /></p>
                         </div>
                       )}
                     </motion.div>
