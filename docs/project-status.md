@@ -22,8 +22,8 @@ Bản mẫu hiện tại là một ứng dụng **Next.js 15** sử dụng **Rea
 * **Assignment Builder (`/dashboard/tutor/assignments/create`):** Trình giao bài tập Toán 10 mới, cho phép chọn câu từ ngân hàng, thêm thủ công hoặc **tự động phân bổ sinh đề theo ma trận độ nhận thức & chương kiến thức**.
 * **Question Bank (`/dashboard/tutor/question-bank`):** Quản lý câu hỏi Toán 10 có bộ lọc nâng cao (Chương, Chủ đề, Nhận thức, Độ khó, Loại câu hỏi, Trạng thái), tích hợp hai trình nhập liệu mockup:
   * **Manual Entry Form:** Form điền đầy đủ thuộc tính của câu hỏi Toán 10 (LaTeX, Chương, Chủ đề, Đáp án...).
-  * **Bulk Paste Import:** Nhập nhanh hàng loạt từ text thô, có bộ mô phỏng phân tích cấu trúc (Parse) câu hỏi và đáp án để lưu nháp.
-* **Import Center (`/dashboard/tutor/import`):** Mô phỏng nạp đề thi & đáp án từ PDF/Word Toán 10, hiển thị tiến trình bóc tách và khớp đáp án tự động từ AI.
+  * **Bulk Paste Import (`/dashboard/tutor/import/bulk-paste`):** Trình nhập nhanh hàng loạt từ văn bản thô với bộ phân tích cú pháp regex phía máy khách (Client-side Parser). Hỗ trợ tự động phân tích câu hỏi/đáp án/lời giải, hiển thị cảnh báo lỗi (Warnings), cho phép rà soát duyệt hoặc bỏ qua, chỉnh sửa trực tiếp, và đồng bộ hóa qua `localStorage` vào Ngân hàng câu hỏi.
+* **Import Center (`/dashboard/tutor/import`):** Mô phỏng nạp đề thi & đáp án từ PDF/Word Toán 10, hiển thị tiến trình bóc tách và khớp đáp án tự động từ AI, đồng thời tích hợp lối tắt truy cập nhanh vào trình Nhập thô bằng Copy-Paste.
 
 ### 🧑‍🎓 Học sinh (Student Features)
 * **Overview & Assignments:** Hiển thị bài tập Toán 10 cần làm, lịch sử điểm số và khuyên học tập từ AI.

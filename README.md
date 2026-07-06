@@ -22,20 +22,18 @@ EStudy tập trung tối ưu hóa **luồng nghiệp vụ ôn tập câu sai** c
 
 ---
 
-## 🚀 Phạm vi Tính năng (Sprint 1.5 - Math 10 Focus)
-
 ### 1. Tính năng cốt lõi gần hạn (Near-term Focus):
 * **Ngân hàng câu hỏi Toán 10:** Quản lý câu hỏi trắc nghiệm/đáp án ngắn theo chương trình GDPT 2018 (Mệnh đề, Tập hợp, Hàm số bậc hai, Vectơ, Hệ thức lượng, Thống kê, Xác suất).
-* **Nhập câu hỏi thủ công:** Giao diện điền đầy đủ siêu dữ liệu (Metadata): Chủ đề, Độ khó, Mức độ nhận thức (Nhận biết, Thông hiểu, Vận dụng, Vận dụng cao), Loại câu hỏi.
-* **Nhập nhanh hàng loạt (Bulk Paste):** Hỗ trợ giáo viên copy-paste nhanh câu hỏi từ tài liệu Word/PDF có sẵn, hiển thị xem trước bóc tách thử nghiệm.
+* **Nhập nhanh hàng loạt (Bulk Paste):** Trình bóc tách regex phía máy khách (Client-side parser) giúp chuyển đổi văn bản câu hỏi thô thành các thẻ câu hỏi chuẩn hóa có ký hiệu LaTeX. Tích hợp ma trận phân loại (Chương, Chủ đề, Độ khó, Mức độ nhận thức).
+* **Quy trình duyệt trước khi lưu (Review-First Workflow):** Câu hỏi nạp vào được đánh dấu trạng thái `NEEDS_REVIEW` (Cần rà soát) nếu thiếu đáp án/lời giải/lựa chọn. Giáo viên rà soát, chỉnh sửa trực tiếp trên thẻ câu hỏi, duyệt thông qua hoặc bỏ qua trước khi lưu.
+* **Đồng bộ hóa Local Storage:** Dữ liệu sau khi giáo viên duyệt được ghi đè và lưu trữ trong `localStorage` để đồng bộ hóa lập tức qua trang Ngân hàng câu hỏi, Giao bài tập mà không cần gọi API máy chủ.
 * **Trình thiết lập đề thi:** Hỗ trợ tạo đề theo cấu trúc phân bố ma trận (độ khó và chương học) tự động.
 * **Học sinh làm bài & Xem kết quả:** Làm bài trắc nghiệm/điền từ ngắn có bộ đếm thời gian, xem đáp án chi tiết và giải thích AI.
 * **Phân tích lỗi sai:** Bảng tổng hợp câu sai, câu bỏ qua, câu làm chậm theo từng chủ đề Toán 10.
 
 ### 2. Tính năng dài hạn tương lai (Future Features):
-* Tải tệp đề bài & đáp án (PDF, Word, Ảnh) riêng biệt và tự động khớp cặp bằng AI OCR.
+* Tải tệp đề bài & đáp án (PDF, Word, Ảnh) riêng biệt và tự động khớp cặp bằng AI OCR (sẽ triển khai sau để tối ưu hóa chi phí gọi Cloud OCR khi bắt đầu MVP).
 * Nhận dạng công thức toán học/hóa học nâng cao.
-* Quy trình giáo viên phê duyệt câu hỏi trước khi lưu vào ngân hàng đề chính thức.
 * Xuất đề bài và đáp án ra file Word (.docx) và PDF chất lượng cao.
 
 ---

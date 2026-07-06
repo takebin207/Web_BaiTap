@@ -32,13 +32,12 @@ Nền tảng giúp giáo viên tối ưu hóa thời gian chuẩn bị bài họ
 
 ### 1. Tính năng cốt lõi gần hạn (Near-term Focus)
 * **Ngân hàng đề Toán 10:** Quản lý câu hỏi theo chương trình phổ thông 2018 (Mệnh đề, Bất phương trình, Hàm số bậc hai, Hệ thức lượng, Vectơ, Phương pháp tọa độ, Thống kê, Xác suất).
-* **Nhập câu hỏi thủ công:** Giáo viên nhập câu hỏi có LaTeX đầy đủ thuộc tính: chủ đề, độ khó, nhận thức, loại câu hỏi.
-* **Nhập nhanh hàng loạt (Bulk Paste):** Cho phép copy-paste thô đề thi từ Word/PDF vào textarea để AI bóc tách và xem trước kết quả.
+* **Nhập nhanh hàng loạt (Bulk Paste - Đầu tiên):** Trình bóc tách regex phía máy khách giúp chuyển đổi văn bản thô từ tài liệu soạn thảo có sẵn thành câu hỏi. **Lý do triển khai trước:** Tiết kiệm chi phí gọi Cloud OCR, đơn giản hơn, ổn định hơn cho bản MVP đầu tiên so với tải file.
+* **Quy trình duyệt trước khi lưu (Review-First):** Câu hỏi nạp vào không được phép đưa trực tiếp vào ngân hàng đề chính thức mà phải qua quy trình kiểm duyệt (được đánh dấu nháp `NEEDS_REVIEW` nếu thiếu dữ liệu). Giáo viên chỉnh sửa trực tiếp, duyệt hoặc bỏ qua để đảm bảo chất lượng.
 * **Trình tạo đề theo cấu trúc:** Tự động sinh đề thi dựa trên số câu chỉ định từng chương và ma trận độ nhận thức (Nhận biết, Thông hiểu, Vận dụng, Vận dụng cao).
 * **Phân tích lỗi sai (Trọng tâm):** Bảng tổng hợp câu sai theo chương Toán 10, câu bị bỏ qua, câu làm chậm và đề xuất bài học kế tiếp.
 
 ### 2. Tính năng dài hạn tương lai (Future Features)
-* **Nhập đề thi thông minh (Import Center):** Giáo viên tải lên tệp đề bài và đáp án riêng biệt (PDF, Word, Ảnh). AI OCR tự động bóc tách và khớp đáp án, chuyển thành câu hỏi có cấu trúc.
+* **Nhập đề thi thông minh (Import Center):** Giáo viên tải lên tệp đề bài và đáp án riêng biệt (PDF, Word, Ảnh). AI OCR tự động bóc tách và khớp đáp án, chuyển thành câu hỏi có cấu trúc (sẽ triển khai sau ở giai đoạn nâng cao).
 * **Hỗ trợ công thức Toán phức tạp:** Nhận dạng công thức toán học (LaTeX) bằng OCR nâng cao.
-* **Quy trình phê duyệt (Review Workflow):** Cần giáo viên kiểm duyệt câu hỏi bóc tách trước khi đưa vào ngân hàng đề chính thức.
 * **Xuất bản đề (Export):** Xuất đề bài hoặc lời giải chi tiết ra tệp Word (.docx) và PDF chất lượng cao.

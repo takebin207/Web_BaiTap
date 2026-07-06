@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { mockImportJobs } from "@/data/mock/data";
+import Link from "next/link";
 
 const container = {
   hidden: { opacity: 0 },
@@ -64,6 +65,26 @@ export default function ImportCenterPage() {
         <Badge variant="outline" className="text-amber-600 bg-amber-50/50 border-amber-250 py-1 px-2.5 text-xs font-semibold">
           🚀 Giao diện Thử nghiệm Giai đoạn 1
         </Badge>
+      </motion.div>
+
+      {/* Quick Paste Banner */}
+      <motion.div
+        variants={item}
+        className="rounded-2xl p-5 border border-indigo-200 bg-indigo-50/30 flex flex-col sm:flex-row justify-between items-center gap-4"
+      >
+        <div className="space-y-1">
+          <h3 className="font-bold text-sm text-indigo-900 flex items-center gap-1.5">
+            📝 Nhập liệu nhanh bằng cách Copy-Paste
+          </h3>
+          <p className="text-xs text-indigo-700">
+            Bạn có sẵn câu hỏi dạng văn bản từ tài liệu Word/PDF? Hãy sử dụng Trình nhập nhanh thô để bóc tách ngay câu hỏi mẫu Toán 10.
+          </p>
+        </div>
+        <Link href="/dashboard/tutor/import/bulk-paste" className="shrink-0 w-full sm:w-auto">
+          <Button className="w-full sm:w-auto rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs py-2 px-4 cursor-pointer">
+            Bắt đầu Nhập thô
+          </Button>
+        </Link>
       </motion.div>
 
       {/* Upload layout */}

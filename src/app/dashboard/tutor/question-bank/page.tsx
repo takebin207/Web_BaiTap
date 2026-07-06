@@ -23,8 +23,11 @@ import {
   questionBank,
   sampleChapters,
   sampleTopics,
+  Question,
 } from "@/data/mock/data";
 import MathRenderer from "@/components/ui/math-renderer";
+import { getLocalStorageQuestions } from "@/data/mock/store";
+import Link from "next/link";
 
 const container = {
   hidden: { opacity: 0 },
@@ -37,6 +40,7 @@ const item = {
 };
 
 export default function QuestionBankPage() {
+  const [questions] = useState<Question[]>(() => getLocalStorageQuestions());
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -77,7 +81,7 @@ export default function QuestionBankPage() {
   const [bulkPreview, setBulkPreview] = useState<Array<{ content: string; key: string }> | null>(null);
 
   // Filter local logic
-  const filteredQuestions = questionBank.filter((q) => {
+  const filteredQuestions = questions.filter((q) => {
     const matchesSearch =
       q.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
       q.explanation.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -213,14 +217,15 @@ export default function QuestionBankPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button
-            onClick={() => setShowBulkModal(true)}
-            variant="outline"
-            size="sm"
-            className="rounded-xl border-indigo-200 text-indigo-600 hover:bg-indigo-50/50 text-xs font-semibold"
-          >
-            <ClipboardList className="mr-1.5 h-4 w-4" /> Nhập hàng loạt (Paste)
-          </Button>
+          <Link href="/dashboard/tutor/import/bulk-paste">
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-xl border-indigo-200 text-indigo-600 hover:bg-indigo-50/50 text-xs font-semibold"
+            >
+              <ClipboardList className="mr-1.5 h-4 w-4" /> Nhập hàng loạt (Paste)
+            </Button>
+          </Link>
           <Button
             onClick={() => setShowManualModal(true)}
             size="sm"
@@ -417,7 +422,14 @@ export default function QuestionBankPage() {
         {filteredQuestions.length === 0 ? (
           <div className="rounded-2xl p-10 text-center flex flex-col items-center justify-center border border-dashed border-[var(--border-subtle)] bg-[var(--surface-card)]">
             <FolderOpen className="h-10 w-10 mb-2 text-[var(--text-tertiary)]" />
-            <p className="text-xs font-semibold text-[var(--text-secondary)]">Không tìm thấy câu hỏi Toán 10 nào phù hợp</p>
+            <p className="text-xs font-semibold mb-3.5 text-[var(--text-secondary)]">
+              Không tìm thấy câu hỏi Toán 10 nào phù hợp
+            </p>
+            <Link href="/dashboard/tutor/import/bulk-paste">
+              <Button size="sm" className="rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-100 text-xs py-1.5 px-3">
+                Nhập câu hỏi từ văn bản thô
+              </Button>
+            </Link>
           </div>
         ) : (
           <div className="space-y-3">
