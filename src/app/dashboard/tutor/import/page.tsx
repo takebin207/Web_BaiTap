@@ -9,8 +9,6 @@ import {
   AlertTriangle,
   CheckCircle2,
   Clock,
-  HelpCircle,
-  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -31,7 +29,7 @@ export default function ImportCenterPage() {
   const [jobs, setJobs] = useState(mockImportJobs);
 
   const handleUploadClick = () => {
-    alert("Đã mô phỏng chọn tệp tải lên! Tính năng OCR bóc tách bằng Gemini API sẽ được kích hoạt tại Giai đoạn 3.");
+    alert("Đã mô phỏng chọn tệp tải lên! Tính năng bóc tách đề thi Toán 10 bằng Gemini OCR sẽ được tích hợp ở giai đoạn sau.");
   };
 
   const getStatusDisplay = (status: string) => {
@@ -57,10 +55,10 @@ export default function ImportCenterPage() {
       <motion.div variants={item} className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>
-            Nhập đề thi (Import Center)
+            Nhập đề thi Toán 10 (Import Center)
           </h2>
           <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
-            Tính năng cao cấp: Nhập tệp câu hỏi & đáp án riêng biệt để AI tự động chuyển hóa thành ngân hàng câu hỏi.
+            Tính năng cao cấp: Nhập tệp đề bài & đáp án riêng biệt để AI tự động chuyển hóa thành ngân hàng câu hỏi.
           </p>
         </div>
         <Badge variant="outline" className="text-amber-600 bg-amber-50/50 border-amber-250 py-1 px-2.5 text-xs font-semibold">
@@ -68,9 +66,8 @@ export default function ImportCenterPage() {
         </Badge>
       </motion.div>
 
-      {/* Upload Drag & Drop mockup */}
+      {/* Upload layout */}
       <div className="grid gap-6 md:grid-cols-2">
-        {/* Upload Column 1: Questions */}
         <motion.div
           variants={item}
           className="rounded-2xl p-6 text-center flex flex-col items-center justify-center border-2 border-dashed border-[var(--border-default)] transition-colors hover:border-indigo-400"
@@ -78,7 +75,7 @@ export default function ImportCenterPage() {
         >
           <Upload className="h-10 w-10 text-indigo-500 mb-3" />
           <h3 className="text-sm font-semibold mb-1.5" style={{ color: "var(--text-primary)" }}>
-            Tải lên tệp đề bài (Câu hỏi)
+            Tải lên tệp đề bài Toán 10 (Câu hỏi)
           </h3>
           <p className="text-xs mb-4 max-w-xs" style={{ color: "var(--text-tertiary)" }}>
             Hỗ trợ định dạng: **PDF**, **Word (.docx)** hoặc **Ảnh chụp đề bài**
@@ -92,7 +89,6 @@ export default function ImportCenterPage() {
           </Button>
         </motion.div>
 
-        {/* Upload Column 2: Answers (Optional) */}
         <motion.div
           variants={item}
           className="rounded-2xl p-6 text-center flex flex-col items-center justify-center border-2 border-dashed border-[var(--border-default)] transition-colors hover:border-indigo-400"
@@ -100,10 +96,10 @@ export default function ImportCenterPage() {
         >
           <FileText className="h-10 w-10 text-emerald-500 mb-3" />
           <h3 className="text-sm font-semibold mb-1.5" style={{ color: "var(--text-primary)" }}>
-            Tải lên tệp đáp án (Tùy chọn)
+            Tải lên tệp đáp án Toán 10 (Tùy chọn)
           </h3>
           <p className="text-xs mb-4 max-w-xs" style={{ color: "var(--text-tertiary)" }}>
-            Hỗ trợ bóc tách và tự động ghép đáp án đúng với câu hỏi tương ứng.
+            Hỗ trợ tự động khớp với các câu hỏi tương ứng trong đề.
           </p>
           <Button
             onClick={handleUploadClick}
@@ -116,7 +112,7 @@ export default function ImportCenterPage() {
         </motion.div>
       </div>
 
-      {/* Warning Alert panel */}
+      {/* Warning panel */}
       <motion.div
         variants={item}
         className="rounded-2xl p-4 border border-amber-200 bg-amber-50/40 flex items-start gap-3"
@@ -124,30 +120,29 @@ export default function ImportCenterPage() {
         <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
         <div className="space-y-1">
           <h4 className="text-xs font-bold text-amber-800">
-            ⚠️ Lưu ý về công thức toán học & hóa học phức tạp:
+            ⚠️ Lưu ý về nhận dạng công thức Toán học lớp 10:
           </h4>
           <p className="text-xs text-amber-700 leading-relaxed">
-            Hệ thống nhận dạng công thức bằng OCR (Document AI) có thể xuất hiện ký tự lạ. EStudy áp dụng quy trình: <strong>AI bóc tách nháp → Giáo viên kiểm duyệt nội dung trước khi lưu chính thức vào ngân hàng câu hỏi.</strong>
+            Nhận dạng ký hiệu LaTeX cho các vectơ, parabol và bất phương trình có thể phát sinh sai lệch nhỏ. Vui lòng rà soát danh sách câu hỏi ở trạng thái <strong>CẦN DUYỆT</strong> trước khi lưu vào ngân hàng đề chính thức.
           </p>
         </div>
       </motion.div>
 
-      {/* Active Import jobs list */}
+      {/* Jobs history */}
       <motion.div
         variants={item}
         className="rounded-2xl p-5 sm:p-6 space-y-4"
         style={{ background: "var(--surface-card)", border: "1px solid var(--border-default)" }}
       >
         <h3 className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-          Lịch sử & Tiến trình nạp đề ({jobs.length} tệp)
+          Tiến trình nạp đề thi Toán 10 ({jobs.length} tệp)
         </h3>
 
         <div className="space-y-4">
           {jobs.map((job) => (
             <div
               key={job.id}
-              className="p-4 rounded-xl border border-[var(--border-subtle)] space-y-3.5"
-              style={{ background: "var(--surface-subtle)" }}
+              className="p-4 rounded-xl border border-[var(--border-subtle)] space-y-3.5 bg-[var(--surface-subtle)]"
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="flex items-center gap-2.5">
@@ -157,47 +152,45 @@ export default function ImportCenterPage() {
                       {job.questionFileName}
                     </h4>
                     <p className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>
-                      Tải lên lúc: {new Date(job.uploadedAt).toLocaleString("vi-VN")} • Định dạng: {job.format.toUpperCase()}
+                      Nạp lúc: {new Date(job.uploadedAt).toLocaleString("vi-VN")} • Định dạng: {job.format.toUpperCase()}
                     </p>
                   </div>
                 </div>
                 <div>{getStatusDisplay(job.status)}</div>
               </div>
 
-              {/* Progress bar if running */}
               {job.progress < 100 && (
                 <div className="space-y-1">
                   <div className="flex justify-between text-[10px] font-medium" style={{ color: "var(--text-secondary)" }}>
-                    <span>Đang tiến hành xử lý...</span>
+                    <span>Đang trích xuất công thức...</span>
                     <span>{job.progress}%</span>
                   </div>
                   <Progress value={job.progress} className="h-1.5" />
                 </div>
               )}
 
-              {/* Details counts row */}
               <div className="flex flex-wrap items-center justify-between text-[10px] pt-2.5 border-t border-[var(--border-subtle)]" style={{ color: "var(--text-tertiary)" }}>
                 <div className="flex items-center gap-4">
-                  <span>Số câu hỏi nhận dạng: <strong style={{ color: "var(--text-secondary)" }}>{job.extractedCount} câu</strong></span>
+                  <span>Số câu hỏi: <strong style={{ color: "var(--text-secondary)" }}>{job.extractedCount} câu</strong></span>
                   {job.answerFileName && (
                     <span>Khớp đáp án: <strong style={{ color: "var(--text-secondary)" }}>{job.matchedCount}/{job.extractedCount}</strong></span>
                   )}
-                  <span>Cần duyệt thủ công: <strong className="text-orange-500 font-bold">{job.needsReviewCount} câu</strong></span>
+                  <span>Cần duyệt: <strong className="text-orange-500 font-bold">{job.needsReviewCount} câu</strong></span>
                 </div>
 
                 <div className="flex items-center gap-3 mt-1.5 sm:mt-0">
-                  <span>Chi phí token AI: <strong style={{ color: "var(--text-secondary)" }}>{job.estimatedCost}</strong></span>
+                  <span>Chi phí AI ước tính: <strong style={{ color: "var(--text-secondary)" }}>{job.estimatedCost}</strong></span>
                   {job.status === "needs_review" ? (
                     <Button
-                      onClick={() => alert(`Đã mở giao diện duyệt ${job.needsReviewCount} câu hỏi của tệp ${job.questionFileName}`)}
+                      onClick={() => alert(`Duyệt ${job.needsReviewCount} câu hỏi Toán 10 từ tệp ${job.questionFileName}`)}
                       size="sm"
                       className="rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-semibold text-[10px] py-1 px-2.5 h-6"
                     >
-                      Duyệt câu hỏi
+                      Duyệt ngay
                     </Button>
                   ) : job.status === "completed" ? (
                     <span className="text-green-500 font-bold flex items-center gap-0.5">
-                      <CheckCircle2 className="h-3 w-3" /> Đã lưu ngân hàng
+                      <CheckCircle2 className="h-3 w-3" /> Đã lưu
                     </span>
                   ) : null}
                 </div>
@@ -209,3 +202,5 @@ export default function ImportCenterPage() {
     </motion.div>
   );
 }
+
+import { X } from "lucide-react";

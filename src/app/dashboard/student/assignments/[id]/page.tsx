@@ -7,8 +7,6 @@ import {
   Clock,
   Sparkles,
   Save,
-  CheckCircle,
-  HelpCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +23,7 @@ export default function StudentPracticeSessionPage({ params }: PageProps) {
   const { id } = use(params);
 
   const assignment = mockAssignments.find((a) => a.id === id) || mockAssignments[0];
-  const questionsList = questionBank.filter((q) => q.status === "READY" && q.subject === assignment.subject);
+  const questionsList = questionBank.filter((q) => q.status === "READY" && q.chapterId === "chap-1"); // Use Math 10 chap 1 questions
 
   // Active question index
   const [activeIdx, setActiveIdx] = useState(0);
@@ -74,7 +72,7 @@ export default function StudentPracticeSessionPage({ params }: PageProps) {
   if (!activeQuestion) {
     return (
       <div className="p-8 text-center text-xs" style={{ color: "var(--text-tertiary)" }}>
-        Không tìm thấy câu hỏi phù hợp cho bài tập này.
+        Không tìm thấy câu hỏi phù hợp cho bài tập Toán 10 này.
       </div>
     );
   }
@@ -97,7 +95,7 @@ export default function StudentPracticeSessionPage({ params }: PageProps) {
               {assignment.title}
             </h2>
             <p className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>
-              Lớp: {assignment.className}
+              Môn: Toán 10 • {assignment.className}
             </p>
           </div>
         </div>
@@ -146,34 +144,48 @@ export default function StudentPracticeSessionPage({ params }: PageProps) {
               {activeQuestion.content}
             </p>
 
-            {/* Multiple Choice Options */}
-            <div className="space-y-3">
-              {activeQuestion.options.map((opt) => {
-                const isSelected = answers[activeQuestion.id] === opt.id;
-                return (
-                  <button
-                    key={opt.id}
-                    onClick={() => selectAnswer(activeQuestion.id, opt.id)}
-                    className={`w-full text-left p-4 rounded-xl border transition-all text-xs flex items-center gap-3 cursor-pointer ${
-                      isSelected
-                        ? "border-indigo-500 bg-indigo-50/20 text-indigo-900 font-medium"
-                        : "border-[var(--border-subtle)] bg-[var(--surface-subtle)] hover:bg-[var(--surface-inset)]"
-                    }`}
-                  >
-                    <span
-                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border font-bold text-xs ${
+            {/* Multiple Choice Options or short answer */}
+            {activeQuestion.questionType === "multiple_choice" && activeQuestion.options ? (
+              <div className="space-y-3">
+                {activeQuestion.options.map((opt) => {
+                  const isSelected = answers[activeQuestion.id] === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      onClick={() => selectAnswer(activeQuestion.id, opt.id)}
+                      className={`w-full text-left p-4 rounded-xl border transition-all text-xs flex items-center gap-3 cursor-pointer ${
                         isSelected
-                          ? "border-indigo-600 bg-indigo-600 text-white"
-                          : "border-[var(--border-default)] bg-white text-[var(--text-secondary)]"
+                          ? "border-indigo-500 bg-indigo-50/20 text-indigo-900 font-medium"
+                          : "border-[var(--border-subtle)] bg-[var(--surface-subtle)] hover:bg-[var(--surface-inset)]"
                       }`}
                     >
-                      {opt.label}
-                    </span>
-                    <span className="flex-1">{opt.content}</span>
-                  </button>
-                );
-              })}
-            </div>
+                      <span
+                        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border font-bold text-xs ${
+                          isSelected
+                            ? "border-indigo-600 bg-indigo-600 text-white"
+                            : "border-[var(--border-default)] bg-white text-[var(--text-secondary)]"
+                        }`}
+                      >
+                        {opt.label}
+                      </span>
+                      <span className="flex-1">{opt.content}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="space-y-2 text-xs">
+                <label className="font-semibold block text-[var(--text-secondary)]">Điền đáp án của bạn:</label>
+                <input
+                  type="text"
+                  placeholder="Nhập câu trả lời ngắn..."
+                  value={answers[activeQuestion.id] || ""}
+                  onChange={(e) => selectAnswer(activeQuestion.id, e.target.value)}
+                  className="w-full p-3 rounded-xl border border-[var(--border-default)] bg-[var(--bg-secondary)]"
+                  style={{ color: "var(--text-primary)" }}
+                />
+              </div>
+            )}
           </div>
         </div>
 
@@ -230,10 +242,10 @@ export default function StudentPracticeSessionPage({ params }: PageProps) {
             style={{ background: "linear-gradient(to bottom right, var(--surface-card), oklch(0.58 0.2 260 / 0.02))" }}
           >
             <h4 className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-              <Sparkles className="h-3.5 w-3.5" /> Chế độ chống gian lận
+              <Sparkles className="h-3.5 w-3.5" /> Chống gian lận
             </h4>
             <p className="text-[10px] leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
-              Hệ thống đang mô phỏng tự động ghi nhận thời gian làm bài của từng câu hỏi phục vụ phân tích câu sai cho giáo viên. Không thoát màn hình kiểm tra.
+              Bộ phân tích hành vi đang tự động ghi nhận thời gian làm bài của từng câu hỏi để đưa ra báo cáo chính xác cho giáo viên.
             </p>
           </div>
         </div>

@@ -22,6 +22,7 @@ import {
   recentSubmissions,
   wrongQuestionItems,
   aiReviewSummaries,
+  sampleChapters,
 } from "@/data/mock/data";
 import Link from "next/link";
 
@@ -184,7 +185,7 @@ export default function TutorDashboard() {
                     {item.question.content}
                   </p>
                   <div className="mt-3 flex items-center justify-between text-xs" style={{ color: "var(--text-tertiary)" }}>
-                    <span>{item.question.chapter}</span>
+                    <span>{sampleChapters.find(c => c.id === item.question.chapterId)?.name || item.question.chapterId}</span>
                     <span>Số học sinh sai: {item.wrongCount}/{item.totalAttempts}</span>
                   </div>
                 </div>

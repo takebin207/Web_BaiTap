@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { mockQuestions } from "@/data/mock/data";
+import { mockQuestions, sampleChapters } from "@/data/mock/data";
 
 const container = {
   hidden: { opacity: 0 },
@@ -34,7 +34,7 @@ export default function AdminQuestions() {
 
   const filteredQuestions = mockQuestions.filter((q) =>
     q.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    q.subject.toLowerCase().includes(searchQuery.toLowerCase())
+    q.subjectId.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const getDifficultyColor = (diff: string) => {
@@ -95,10 +95,10 @@ export default function AdminQuestions() {
                   {q.difficulty}
                 </Badge>
                 <Badge variant="secondary" className="text-xs">
-                  {q.subject}
+                  {q.subjectId === "math" ? "Toán" : q.subjectId}
                 </Badge>
                 <span className="text-xs" style={{ color: "var(--text-tertiary)" }}>
-                  {q.chapter}
+                  {sampleChapters.find(c => c.id === q.chapterId)?.name || q.chapterId}
                 </span>
               </div>
               <p className="text-sm font-semibold truncate leading-relaxed" style={{ color: "var(--text-primary)" }}>
