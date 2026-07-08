@@ -411,15 +411,15 @@ export default function StudentPracticeSessionPage({ params }: PageProps) {
                       onClick={() => selectAnswer(activeQuestion.id, opt.id)}
                       className={`w-full text-left p-4 rounded-xl border transition-all text-xs flex items-center gap-3 cursor-pointer ${
                         isSelected
-                          ? "border-indigo-500 bg-indigo-50/20 text-indigo-900 font-medium font-semibold"
+                          ? "border-indigo-500 bg-indigo-50/20 dark:bg-indigo-950/40 text-indigo-900 dark:text-indigo-200 font-semibold"
                           : "border-[var(--border-subtle)] bg-[var(--surface-subtle)] hover:bg-[var(--surface-inset)]"
                       }`}
                     >
                       <span
                         className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border font-bold text-xs ${
                           isSelected
-                            ? "border-indigo-600 bg-indigo-600 text-white"
-                            : "border-[var(--border-default)] bg-white text-[var(--text-secondary)]"
+                            ? "border-indigo-650 dark:border-indigo-550 bg-indigo-600 text-white"
+                            : "border-[var(--border-default)] bg-[var(--surface-card)] text-[var(--text-secondary)]"
                         }`}
                       >
                         {opt.label}

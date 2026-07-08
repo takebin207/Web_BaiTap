@@ -117,7 +117,10 @@ export default function QuestionBankPage() {
   };
 
   useEffect(() => {
-    fetchQuestions();
+    const timer = setTimeout(() => {
+      fetchQuestions();
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   // Filter local logic
@@ -350,15 +353,15 @@ export default function QuestionBankPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "READY":
-        return <Badge className="bg-green-50 text-green-700 border-green-150 text-[9px] uppercase font-semibold">Sẵn sàng</Badge>;
+        return <Badge className="bg-green-500/10 text-green-700 dark:text-green-400 border border-green-200/20 text-[9px] uppercase font-semibold">Sẵn sàng</Badge>;
       case "DRAFT":
-        return <Badge className="bg-gray-50 text-gray-700 border-gray-150 text-[9px] uppercase font-semibold">Nháp</Badge>;
+        return <Badge className="bg-gray-500/10 text-gray-700 dark:text-gray-400 border border-gray-200/20 text-[9px] uppercase font-semibold">Nháp</Badge>;
       case "NEEDS_REVIEW":
-        return <Badge className="bg-yellow-50 text-yellow-700 border-yellow-150 text-[9px] uppercase font-semibold">Cần duyệt</Badge>;
+        return <Badge className="bg-yellow-500/10 text-yellow-755 dark:text-yellow-400 border border-yellow-200/20 text-[9px] uppercase font-semibold">Cần duyệt</Badge>;
       case "REVIEW_REQUIRED":
-        return <Badge className="bg-orange-50 text-orange-700 border-orange-150 text-[9px] uppercase font-semibold">Cần sửa</Badge>;
+        return <Badge className="bg-orange-500/10 text-orange-700 dark:text-orange-400 border border-orange-200/20 text-[9px] uppercase font-semibold">Cần sửa</Badge>;
       case "ERROR":
-        return <Badge className="bg-red-50 text-red-700 border-red-150 text-[9px] uppercase font-semibold">Lỗi OCR</Badge>;
+        return <Badge className="bg-red-500/10 text-red-700 dark:text-red-400 border border-red-200/20 text-[9px] uppercase font-semibold">Lỗi OCR</Badge>;
       default:
         return null;
     }
@@ -730,7 +733,7 @@ export default function QuestionBankPage() {
             initial={{ y: 80, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 80, opacity: 0 }}
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 p-4 rounded-2xl shadow-xl flex items-center gap-4 bg-white/95 backdrop-blur border border-indigo-100 max-w-md w-[90%] sm:w-full justify-between text-xs"
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 p-4 rounded-2xl shadow-xl flex items-center gap-4 bg-[var(--surface-card)]/95 backdrop-blur border border-[var(--border-default)] max-w-md w-[90%] sm:w-full justify-between text-xs"
           >
             <div className="flex items-center gap-2">
               <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-white font-bold text-[10px]">
@@ -743,7 +746,7 @@ export default function QuestionBankPage() {
                 onClick={() => setSelectedIds([])}
                 variant="ghost"
                 size="sm"
-                className="text-[10px] text-red-500 hover:bg-red-50 rounded-xl px-2.5 py-1.5 h-7 cursor-pointer"
+                className="text-[10px] text-red-500 hover:bg-red-500/10 rounded-xl px-2.5 py-1.5 h-7 cursor-pointer"
               >
                 Bỏ chọn
               </Button>
@@ -772,7 +775,7 @@ export default function QuestionBankPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-y-auto p-6 space-y-4"
+              className="bg-[var(--surface-card)] rounded-2xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-y-auto p-6 space-y-4 border border-[var(--border-default)]"
             >
               <div className="flex justify-between items-center border-b border-[var(--border-subtle)] pb-3">
                 <h3 className="font-bold text-sm text-[var(--text-primary)]">
@@ -792,7 +795,7 @@ export default function QuestionBankPage() {
                     placeholder="Ví dụ: Cho tam giác ABC có góc A = 60..."
                     value={manualForm.content}
                     onChange={(e) => setManualForm(prev => ({ ...prev, content: e.target.value }))}
-                    className="w-full p-2.5 rounded-xl border border-[var(--border-default)]"
+                    className="w-full p-2.5 rounded-xl border border-[var(--border-default)] bg-[var(--bg-secondary)] text-[var(--text-primary)]"
                   />
                 </div>
 
@@ -806,28 +809,28 @@ export default function QuestionBankPage() {
                         placeholder="Lựa chọn A"
                         value={manualForm.optA}
                         onChange={(e) => setManualForm(prev => ({ ...prev, optA: e.target.value }))}
-                        className="p-2 rounded-xl border border-[var(--border-default)]"
+                        className="p-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-secondary)] text-[var(--text-primary)]"
                       />
                       <input
                         type="text"
                         placeholder="Lựa chọn B"
                         value={manualForm.optB}
                         onChange={(e) => setManualForm(prev => ({ ...prev, optB: e.target.value }))}
-                        className="p-2 rounded-xl border border-[var(--border-default)]"
+                        className="p-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-secondary)] text-[var(--text-primary)]"
                       />
                       <input
                         type="text"
                         placeholder="Lựa chọn C"
                         value={manualForm.optC}
                         onChange={(e) => setManualForm(prev => ({ ...prev, optC: e.target.value }))}
-                        className="p-2 rounded-xl border border-[var(--border-default)]"
+                        className="p-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-secondary)] text-[var(--text-primary)]"
                       />
                       <input
                         type="text"
                         placeholder="Lựa chọn D"
                         value={manualForm.optD}
                         onChange={(e) => setManualForm(prev => ({ ...prev, optD: e.target.value }))}
-                        className="p-2 rounded-xl border border-[var(--border-default)]"
+                        className="p-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-secondary)] text-[var(--text-primary)]"
                       />
                     </div>
                   </div>
@@ -937,7 +940,7 @@ export default function QuestionBankPage() {
                       placeholder="Ví dụ: Đề thi học kỳ..."
                       value={manualForm.source}
                       onChange={(e) => setManualForm(prev => ({ ...prev, source: e.target.value }))}
-                      className="w-full p-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-secondary)]"
+                      className="w-full p-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-secondary)] text-[var(--text-primary)]"
                     />
                   </div>
                 </div>
@@ -950,7 +953,7 @@ export default function QuestionBankPage() {
                     placeholder="Nhập lời giải hoặc hướng dẫn làm bài..."
                     value={manualForm.explanation}
                     onChange={(e) => setManualForm(prev => ({ ...prev, explanation: e.target.value }))}
-                    className="w-full p-2.5 rounded-xl border border-[var(--border-default)]"
+                    className="w-full p-2.5 rounded-xl border border-[var(--border-default)] bg-[var(--bg-secondary)] text-[var(--text-primary)]"
                   />
                 </div>
 

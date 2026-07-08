@@ -41,17 +41,20 @@ Bản mẫu hiện tại là một ứng dụng **Next.js 15** sử dụng **Rea
 * **Assignment Builder v1 [ĐÃ HOÀN THÀNH]:** Triển khai API giao bài `/api/tutor/assignments` cùng các tầng Repository & Service. Đồng bộ hóa quy trình chọn câu hỏi từ Ngân hàng, cấu hình các trường bài tập, xuất bản bài tập (giao bài hoặc lưu nháp) và trang chi tiết đề thi dành cho giáo viên.
 * **Authentication (Auth.js v5) [ĐÃ HOÀN THÀNH]:** Phân quyền Giáo viên và Học sinh sử dụng JWT Session với giao diện Đăng nhập mẫu cao cấp.
 * **Student Attempt v1 [ĐÃ HOÀN THÀNH]:** Hệ thống hóa luồng làm bài và nộp bài dựa trên DB. Học sinh có thể xem trang chi tiết bài tập, bắt đầu/tiếp tục làm bài (lưu trạng thái `IN_PROGRESS` vào DB), làm bài có đếm giờ và nộp bài để chấm trắc nghiệm tự động (lưu trạng thái `GRADED` cùng các câu trả lời vào `AttemptAnswer` trong DB).
+* **Chế độ Giao diện Sáng/Tối (Dark Mode Foundation) [ĐÃ HOÀN THÀNH]:** Tích hợp thư viện `next-themes` và `ThemeProvider` toàn cục, thêm nút chuyển đổi giao diện (Theme Toggle) ở Header hỗ trợ các chế độ Sáng (Light), Tối (Dark), và Hệ thống (System) cùng với bảng phối màu CSS Variables đồng bộ.
+* **Môi trường Cơ sở dữ liệu Phát triển (Dev DB Setup) [ĐÃ HOÀN THÀNH]:** Thêm `docker-compose.yml` chạy local PostgreSQL container (`estudy_dev` database), đồng bộ cấu hình môi trường `.env.example`, và khai báo bộ scripts `prisma:*` trong `package.json` cho việc migrate, seeding, generate và mở database studio.
 
 ## 4. Các tính năng chưa triển khai (Future Phases)
 
-* **Gemini API:** Chưa gọi API thực tế để giải thích câu hỏi hoặc sinh câu hỏi tương tự (sẽ tích hợp ở Phase sau).
-* **OCR PDF/Word:** Chưa tích hợp Vision API hoặc Document AI để đọc tệp tải lên thực tế.
-* **Wrong Question Review v1:** Sổ tay lưu câu sai sẽ được tinh chỉnh hoàn thiện ở sprint tiếp theo để hỗ trợ các báo cáo sâu hơn.
+* **Gemini API:** Chưa gọi API thực tế để giải thích câu hỏi hoặc sinh câu hỏi tương tự (sẽ tích hợp ở Giai đoạn 3).
+* **OCR PDF/Word:** Chưa tích hợp Vision API hoặc Document AI để đọc tệp tải lên thực tế (sẽ tích hợp ở Giai đoạn 4).
+* **Wrong Question Review v1:** Sổ tay lưu câu sai sẽ được tinh chỉnh sâu rộng hơn ở sprint tiếp theo để hỗ trợ báo cáo giáo án ôn tập buổi sau của giáo viên dựa trên dữ liệu làm bài thực tế trong DB.
 
 ---
 
 ## 5. Kế hoạch hành động tiếp theo
 
-1. Tích hợp Google Gemini API để giải thích lời giải chi tiết cho câu sai của học sinh.
-2. Xây dựng thuật toán AI tự động gợi ý đề thi ôn tập tương tự dựa trên lịch sử câu sai của học sinh.
-3. Hoàn thiện các giao diện báo cáo chuyên sâu của giáo viên liên quan đến dữ liệu lượt làm bài thực tế trong DB.
+1. Tinh chỉnh phân hệ Wrong Question Review v1 để đồng bộ hóa sổ tay câu sai thực tế của học sinh sau khi nộp bài vào database.
+2. Tích hợp Google Gemini API để giải thích lời giải chi tiết cho câu sai của học sinh.
+3. Xây dựng thuật toán AI tự động gợi ý đề thi ôn tập tương tự dựa trên lịch sử câu sai của học sinh.
+4. Hoàn thiện các giao diện báo cáo chuyên sâu của giáo viên liên quan đến dữ liệu lượt làm bài thực tế trong DB.

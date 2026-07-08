@@ -232,16 +232,16 @@ export default function StudentResultPage({ params }: PageProps) {
                       const isSelected = studentAns?.selectedAnswer === opt.id;
                       const isCorrectAns = opt.id === q.correctAnswer;
 
-                      let borderStyle = "border-[var(--border-subtle)] bg-white";
+                      let borderStyle = "border-[var(--border-subtle)] bg-[var(--surface-card)]";
                       if (showSolutions) {
                         if (isCorrectAns) {
-                          borderStyle = "border-green-300 bg-green-50/50 text-green-700 font-semibold";
+                          borderStyle = "border-green-300 dark:border-green-900/50 bg-green-50/50 dark:bg-green-950/20 text-green-700 dark:text-green-400 font-semibold";
                         } else if (isSelected && !isCorrect) {
-                          borderStyle = "border-red-300 bg-red-50/50 text-red-700";
+                          borderStyle = "border-red-300 dark:border-red-900/50 bg-red-50/50 dark:bg-red-950/20 text-red-700 dark:text-red-400";
                         }
                       } else {
                         if (isSelected) {
-                          borderStyle = "border-indigo-300 bg-indigo-50/50 text-indigo-700";
+                          borderStyle = "border-indigo-300 dark:border-indigo-900/50 bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-700 dark:text-indigo-300";
                         }
                       }
 

@@ -99,18 +99,18 @@ export default function TutorDashboard() {
       {/* Onboarding Core Workflow Stepper */}
       <motion.div
         variants={item}
-        className="rounded-2xl p-5 border border-indigo-100 bg-gradient-to-r from-indigo-50/20 via-slate-50/50 to-indigo-50/10 space-y-4 text-xs"
+        className="rounded-2xl p-5 border border-[var(--border-default)] bg-gradient-to-r from-indigo-500/5 via-slate-500/5 to-indigo-500/5 space-y-4 text-xs"
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <h3 className="text-xs font-bold text-indigo-700 uppercase tracking-wider flex items-center gap-1.5">
+            <h3 className="text-xs font-bold text-indigo-650 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
               <Sparkles className="h-3.5 w-3.5" /> Quy trình giảng dạy EStudy
             </h3>
             <p className="text-[10px] text-[var(--text-tertiary)] mt-0.5">
               Hoàn thành chặng đường ôn luyện của lớp học chỉ với 3 bước đơn giản.
             </p>
           </div>
-          <Badge className="bg-indigo-100 text-indigo-800 border-indigo-200 self-start sm:self-center text-[9px] font-semibold px-2 py-0.5">
+          <Badge className="bg-indigo-100 dark:bg-indigo-950/55 text-indigo-800 dark:text-indigo-350 border-indigo-200 dark:border-indigo-900/50 self-start sm:self-center text-[9px] font-semibold px-2 py-0.5">
             Toán Học 10
           </Badge>
         </div>
@@ -119,21 +119,21 @@ export default function TutorDashboard() {
           {/* Step 1 */}
           <Link href="/dashboard/tutor/import/bulk-paste" className="block group">
             <div
-              className="rounded-xl p-4 border border-[var(--border-default)] bg-white hover:border-indigo-300 hover:shadow-md transition-all duration-200 h-full flex flex-col justify-between cursor-pointer space-y-3"
+              className="rounded-xl p-4 border border-[var(--border-default)] bg-[var(--surface-card)] hover:border-indigo-300 hover:shadow-md transition-all duration-200 h-full flex flex-col justify-between cursor-pointer space-y-3"
             >
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 font-bold text-[10px] border border-indigo-100">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 font-bold text-[10px] border border-indigo-100 dark:border-indigo-900/50">
                     1
                   </span>
-                  <Badge variant="secondary" className="text-[9px] bg-slate-100 text-slate-700">Nhập đề thô</Badge>
+                  <Badge variant="secondary" className="text-[9px]">Nhập đề thô</Badge>
                 </div>
                 <h4 className="font-bold text-[var(--text-primary)] group-hover:text-indigo-600 transition-colors">Soạn câu hỏi nhanh</h4>
                 <p className="text-[10px] text-[var(--text-tertiary)] leading-relaxed">
                   Copy-paste đề Toán từ Word/PDF vào khung nhập thô. Hệ thống tự động tách câu hỏi, đáp án & lời giải chi tiết.
                 </p>
               </div>
-              <span className="text-[10px] text-indigo-650 font-semibold group-hover:translate-x-1 inline-flex items-center gap-1 mt-2 transition-transform">
+              <span className="text-[10px] text-indigo-650 dark:text-indigo-400 font-semibold group-hover:translate-x-1 inline-flex items-center gap-1 mt-2 transition-transform">
                 Nhập câu hỏi ngay →
               </span>
             </div>
@@ -142,21 +142,21 @@ export default function TutorDashboard() {
           {/* Step 2 */}
           <Link href="/dashboard/tutor/question-bank" className="block group">
             <div
-              className="rounded-xl p-4 border border-[var(--border-default)] bg-white hover:border-indigo-300 hover:shadow-md transition-all duration-200 h-full flex flex-col justify-between cursor-pointer space-y-3"
+              className="rounded-xl p-4 border border-[var(--border-default)] bg-[var(--surface-card)] hover:border-indigo-300 hover:shadow-md transition-all duration-200 h-full flex flex-col justify-between cursor-pointer space-y-3"
             >
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 font-bold text-[10px] border border-indigo-100">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 font-bold text-[10px] border border-indigo-100 dark:border-indigo-900/50">
                     2
                   </span>
-                  <Badge variant="secondary" className="text-[9px] bg-slate-100 text-slate-700">Tạo đề thi</Badge>
+                  <Badge variant="secondary" className="text-[9px]">Tạo đề thi</Badge>
                 </div>
                 <h4 className="font-bold text-[var(--text-primary)] group-hover:text-indigo-600 transition-colors">Tạo bài tập & Giao lớp</h4>
                 <p className="text-[10px] text-[var(--text-tertiary)] leading-relaxed">
                   Chọn câu hỏi từ Ngân hàng đề, thiết lập thời gian làm bài, hạn chót và phát hành trực tuyến cho lớp Toán 10.
                 </p>
               </div>
-              <span className="text-[10px] text-indigo-650 font-semibold group-hover:translate-x-1 inline-flex items-center gap-1 mt-2 transition-transform">
+              <span className="text-[10px] text-indigo-650 dark:text-indigo-400 font-semibold group-hover:translate-x-1 inline-flex items-center gap-1 mt-2 transition-transform">
                 Vào Ngân hàng đề →
               </span>
             </div>
@@ -165,21 +165,21 @@ export default function TutorDashboard() {
           {/* Step 3 */}
           <Link href="/dashboard/tutor/wrong-questions" className="block group">
             <div
-              className="rounded-xl p-4 border border-[var(--border-default)] bg-white hover:border-indigo-300 hover:shadow-md transition-all duration-200 h-full flex flex-col justify-between cursor-pointer space-y-3"
+              className="rounded-xl p-4 border border-[var(--border-default)] bg-[var(--surface-card)] hover:border-indigo-300 hover:shadow-md transition-all duration-200 h-full flex flex-col justify-between cursor-pointer space-y-3"
             >
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 font-bold text-[10px] border border-indigo-100">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 font-bold text-[10px] border border-indigo-100 dark:border-indigo-900/50">
                     3
                   </span>
-                  <Badge variant="secondary" className="text-[9px] bg-amber-50 text-amber-700 border-amber-100">AI Review</Badge>
+                  <Badge variant="secondary" className="text-[9px] bg-amber-50 dark:bg-amber-950/55 text-amber-700 dark:text-amber-350 border-amber-100 dark:border-amber-900/50">AI Review</Badge>
                 </div>
                 <h4 className="font-bold text-[var(--text-primary)] group-hover:text-indigo-600 transition-colors">Xem phân tích câu sai</h4>
                 <p className="text-[10px] text-[var(--text-tertiary)] leading-relaxed">
                   Xem chi tiết các câu học sinh làm sai nhiều, các chủ đề học sinh yếu và nhận giáo án ôn tập đề xuất bởi AI.
                 </p>
               </div>
-              <span className="text-[10px] text-indigo-650 font-semibold group-hover:translate-x-1 inline-flex items-center gap-1 mt-2 transition-transform">
+              <span className="text-[10px] text-indigo-650 dark:text-indigo-400 font-semibold group-hover:translate-x-1 inline-flex items-center gap-1 mt-2 transition-transform">
                 Xem báo cáo câu sai →
               </span>
             </div>

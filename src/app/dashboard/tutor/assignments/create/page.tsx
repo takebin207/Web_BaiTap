@@ -513,7 +513,7 @@ export default function CreateAssignmentPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-2xl shadow-xl w-full max-w-xl p-6 space-y-4 text-xs"
+              className="bg-[var(--surface-card)] rounded-2xl shadow-xl w-full max-w-xl p-6 space-y-4 text-xs border border-[var(--border-default)]"
             >
               <div className="flex justify-between items-center border-b border-[var(--border-subtle)] pb-3">
                 <h3 className="font-bold text-sm text-[var(--text-primary)]">
@@ -535,7 +535,7 @@ export default function CreateAssignmentPage() {
                         type="number"
                         value={structureParams.chap1Count}
                         onChange={(e) => setStructureParams(prev => ({ ...prev, chap1Count: Number(e.target.value) }))}
-                        className="w-full p-2 border border-[var(--border-default)] rounded-xl bg-white text-xs"
+                        className="w-full p-2 border border-[var(--border-default)] rounded-xl bg-[var(--bg-secondary)] text-[var(--text-primary)] text-xs"
                       />
                     </div>
                     <div className="space-y-1">
@@ -544,7 +544,7 @@ export default function CreateAssignmentPage() {
                         type="number"
                         value={structureParams.chap3Count}
                         onChange={(e) => setStructureParams(prev => ({ ...prev, chap3Count: Number(e.target.value) }))}
-                        className="w-full p-2 border border-[var(--border-default)] rounded-xl bg-white text-xs"
+                        className="w-full p-2 border border-[var(--border-default)] rounded-xl bg-[var(--bg-secondary)] text-[var(--text-primary)] text-xs"
                       />
                     </div>
                     <div className="space-y-1">
@@ -553,7 +553,7 @@ export default function CreateAssignmentPage() {
                         type="number"
                         value={structureParams.chap5Count}
                         onChange={(e) => setStructureParams(prev => ({ ...prev, chap5Count: Number(e.target.value) }))}
-                        className="w-full p-2 border border-[var(--border-default)] rounded-xl bg-white text-xs"
+                        className="w-full p-2 border border-[var(--border-default)] rounded-xl bg-[var(--bg-secondary)] text-[var(--text-primary)] text-xs"
                       />
                     </div>
                     <div className="space-y-1">
@@ -562,7 +562,7 @@ export default function CreateAssignmentPage() {
                         type="number"
                         value={structureParams.chap7Count}
                         onChange={(e) => setStructureParams(prev => ({ ...prev, chap7Count: Number(e.target.value) }))}
-                        className="w-full p-2 border border-[var(--border-default)] rounded-xl bg-white text-xs"
+                        className="w-full p-2 border border-[var(--border-default)] rounded-xl bg-[var(--bg-secondary)] text-[var(--text-primary)] text-xs"
                       />
                     </div>
                   </div>
@@ -577,7 +577,7 @@ export default function CreateAssignmentPage() {
                         type="number"
                         value={structureParams.recognitionPct}
                         onChange={(e) => setStructureParams(prev => ({ ...prev, recognitionPct: Number(e.target.value) }))}
-                        className="w-full p-2 text-center border border-[var(--border-default)] rounded-xl font-bold bg-white text-xs"
+                        className="w-full p-2 text-center border border-[var(--border-default)] rounded-xl font-bold bg-[var(--bg-secondary)] text-[var(--text-primary)] text-xs"
                       />
                     </div>
                     <div className="space-y-1 text-center">
@@ -586,7 +586,7 @@ export default function CreateAssignmentPage() {
                         type="number"
                         value={structureParams.understandingPct}
                         onChange={(e) => setStructureParams(prev => ({ ...prev, understandingPct: Number(e.target.value) }))}
-                        className="w-full p-2 text-center border border-[var(--border-default)] rounded-xl font-bold bg-white text-xs"
+                        className="w-full p-2 text-center border border-[var(--border-default)] rounded-xl font-bold bg-[var(--bg-secondary)] text-[var(--text-primary)] text-xs"
                       />
                     </div>
                     <div className="space-y-1 text-center">
@@ -595,7 +595,7 @@ export default function CreateAssignmentPage() {
                         type="number"
                         value={structureParams.applicationPct}
                         onChange={(e) => setStructureParams(prev => ({ ...prev, applicationPct: Number(e.target.value) }))}
-                        className="w-full p-2 text-center border border-[var(--border-default)] rounded-xl font-bold bg-white text-xs"
+                        className="w-full p-2 text-center border border-[var(--border-default)] rounded-xl font-bold bg-[var(--bg-secondary)] text-[var(--text-primary)] text-xs"
                       />
                     </div>
                     <div className="space-y-1 text-center">
@@ -604,7 +604,7 @@ export default function CreateAssignmentPage() {
                         type="number"
                         value={structureParams.advApplicationPct}
                         onChange={(e) => setStructureParams(prev => ({ ...prev, advApplicationPct: Number(e.target.value) }))}
-                        className="w-full p-2 text-center border border-[var(--border-default)] rounded-xl font-bold bg-white text-xs"
+                        className="w-full p-2 text-center border border-[var(--border-default)] rounded-xl font-bold bg-[var(--bg-secondary)] text-[var(--text-primary)] text-xs"
                       />
                     </div>
                   </div>
@@ -647,10 +647,10 @@ export default function CreateAssignmentPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-5 text-center text-xs"
+              className="bg-[var(--surface-card)] rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-5 text-center text-xs border border-[var(--border-default)]"
             >
               <div className="flex flex-col items-center justify-center space-y-2">
-                <div className="h-12 w-12 rounded-full bg-green-50 flex items-center justify-center text-green-500">
+                <div className="h-12 w-12 rounded-full bg-green-500/10 flex items-center justify-center text-green-500">
                   <CheckCircle2 className="h-7 w-7" />
                 </div>
                 <h3 className="text-base font-bold text-green-600">
