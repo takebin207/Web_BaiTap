@@ -19,7 +19,8 @@ import {
   Settings,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
-import { currentStudent, currentTutor, type User } from "@/data/mock/data";
+import { type User } from "@/data/mock/data";
+import { useSession, signOut, signIn } from "next-auth/react";
 
 // ============================================================
 // Navigation Items — EStudy
@@ -63,10 +64,28 @@ interface SidebarProps {
 
 export function Sidebar({ role, collapsed = false, onToggleCollapse, className }: SidebarProps) {
   const pathname = usePathname();
+  const { data: session } = useSession();
   const navItems = role === "student" ? studentNavItems : role === "tutor" ? tutorNavItems : adminNavItems;
-  const user: User = role === "student" ? currentStudent : role === "tutor" ? currentTutor : { id: "admin-001", name: "Quản trị viên", email: "admin@gmail.com", role: "admin" };
+  
+  const user = session?.user || {
+    id: "loading",
+    name: "Đang tải...",
+    email: "",
+    role: role.toUpperCase(),
+  };
+
   const otherRole = role === "student" ? "tutor" : role === "tutor" ? "student" : "tutor";
   const otherRoleLabel = role === "student" ? "Giáo viên" : role === "tutor" ? "Học sinh" : "Giáo viên";
+
+  const handleRoleSwitch = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    const targetEmail = role === "student" ? "nam.teacher@estudy.vn" : "an.nguyen@estudy.vn";
+    await signIn("credentials", {
+      email: targetEmail,
+      password: "password",
+      callbackUrl: role === "student" ? "/dashboard/tutor" : "/dashboard/student",
+    });
+  };
 
   const isActive = (href: string) => {
     if (href === `/dashboard/${role}`) return pathname === href;
@@ -178,20 +197,19 @@ export function Sidebar({ role, collapsed = false, onToggleCollapse, className }
         style={{ borderTop: "1px solid var(--border-subtle)" }}
       >
         {/* Role switcher */}
-        <Link href={`/dashboard/${otherRole}`}>
-          <div
-            className={cn(
-              "flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-medium cursor-pointer transition-colors",
-              collapsed && "justify-center px-2"
-            )}
-            style={{ color: "var(--text-tertiary)" }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface-subtle)")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-          >
-            <Repeat className="h-4 w-4 shrink-0" />
-            {!collapsed && <span>Chuyển sang {otherRoleLabel}</span>}
-          </div>
-        </Link>
+        <div
+          onClick={handleRoleSwitch}
+          className={cn(
+            "flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-medium cursor-pointer transition-colors",
+            collapsed && "justify-center px-2"
+          )}
+          style={{ color: "var(--text-tertiary)" }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface-subtle)")}
+          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+        >
+          <Repeat className="h-4 w-4 shrink-0" />
+          {!collapsed && <span>Chuyển sang {otherRoleLabel}</span>}
+        </div>
 
         {/* User info */}
         <div
@@ -203,7 +221,7 @@ export function Sidebar({ role, collapsed = false, onToggleCollapse, className }
           <div
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white gradient-bg"
           >
-            {getInitials(user.name)}
+            {getInitials(user.name || "HS")}
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
@@ -218,7 +236,7 @@ export function Sidebar({ role, collapsed = false, onToggleCollapse, className }
                 style={{ color: "var(--text-tertiary)" }}
               >
                 {role === "student"
-                  ? `Lớp ${user.grade} • ${user.school}`
+                  ? "Học sinh"
                   : role === "tutor"
                   ? "Giáo viên"
                   : "Quản trị viên"}
@@ -227,7 +245,8 @@ export function Sidebar({ role, collapsed = false, onToggleCollapse, className }
           )}
           {!collapsed && (
             <button
-              className="shrink-0 rounded-md p-1.5 transition-colors hover:opacity-80"
+              onClick={() => signOut({ callbackUrl: "/login" })}
+              className="shrink-0 rounded-md p-1.5 transition-colors hover:opacity-80 cursor-pointer"
               style={{ color: "var(--text-tertiary)" }}
             >
               <LogOut className="h-4 w-4" />

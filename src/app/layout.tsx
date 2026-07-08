@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { SessionProvider } from "next-auth/react";
+import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 import "katex/dist/katex.min.css";
 
@@ -35,10 +37,20 @@ export default function RootLayout({
   return (
     <html lang="vi" className={inter.variable} suppressHydrationWarning>
       <body className="antialiased">
-        <TooltipProvider>
-          {children}
-        </TooltipProvider>
+        <SessionProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <TooltipProvider>
+              {children}
+            </TooltipProvider>
+          </ThemeProvider>
+        </SessionProvider>
       </body>
     </html>
   );
 }
+

@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { mockAssignments, questionBank, studentAttempts } from "@/data/mock/data";
 import Link from "next/link";
 import MathRenderer from "@/components/ui/math-renderer";
 
@@ -25,15 +24,72 @@ export default function StudentResultPage({ params }: PageProps) {
   const { id } = use(params);
   const [expandedQId, setExpandedQId] = useState<string | null>(null);
 
-  const assignment = mockAssignments.find((a) => a.id === id) || mockAssignments[0];
-  const attempt = studentAttempts.find((att) => att.assignmentId === id) || studentAttempts[0];
-  
-  // Use Math 10 questions that match subject
-  const questionsList = questionBank.filter((q) => q.status === "READY" && q.subjectId === "math");
+  const [attempt, setAttempt] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchAttemptDetail = async () => {
+      setIsLoading(true);
+      try {
+        const res = await fetch("/api/student/attempts");
+        if (res.ok) {
+          const data = await res.json();
+          // Find the attempt matching this assignmentId
+          const matched = data.find((att: any) => att.assignmentId === id);
+          if (matched) {
+            setAttempt(matched);
+          } else {
+            setError("Không tìm thấy kết quả bài thi này.");
+          }
+        } else {
+          setError("Không thể kết nối máy chủ để lấy kết quả.");
+        }
+      } catch (e) {
+        console.error(e);
+        setError("Lỗi máy chủ.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchAttemptDetail();
+  }, [id]);
+
+  const questionsList = useMemo(() => {
+    if (!attempt || !attempt.answers) return [];
+    return attempt.answers.map((ans: any) => ({
+      ...ans.question,
+      id: ans.questionId,
+    }));
+  }, [attempt]);
+
+  if (isLoading) {
+    return (
+      <div className="rounded-2xl p-12 text-center flex flex-col items-center justify-center border border-[var(--border-default)] bg-[var(--surface-card)]">
+        <p className="text-xs font-semibold text-[var(--text-secondary)] animate-pulse">
+          Đang tải kết quả bài làm...
+        </p>
+      </div>
+    );
+  }
+
+  if (error || !attempt) {
+    return (
+      <div className="rounded-2xl p-12 text-center flex flex-col items-center justify-center border border-red-100 bg-red-50/10 text-red-700">
+        <p className="text-xs font-semibold">{error || "Không tìm thấy kết quả làm bài."}</p>
+        <Link href="/dashboard/student/assignments" className="mt-4">
+          <Button size="sm" className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white border-none cursor-pointer">
+            Quay lại danh sách
+          </Button>
+        </Link>
+      </div>
+    );
+  }
 
   const correctCount = attempt.score;
   const totalCount = attempt.totalQuestions;
   const incorrectCount = totalCount - correctCount;
+  const showSolutions = attempt.showSolutionsAfterSubmit !== false;
 
   return (
     <div className="space-y-6">
@@ -50,15 +106,15 @@ export default function StudentResultPage({ params }: PageProps) {
           </Link>
           <div>
             <h2 className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-              Kết quả bài làm: {assignment.title}
+              Kết quả bài làm: {attempt.assignmentTitle}
             </h2>
             <p className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>
-              Môn: Toán 10 • Lớp: {assignment.className}
+              Môn: Toán 10 • Lớp: {attempt.className}
             </p>
           </div>
         </div>
         <Link href="/dashboard/student/wrong-questions">
-          <Button size="sm" className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold">
+          <Button size="sm" className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold border-none cursor-pointer">
             Tập trung ôn câu sai
           </Button>
         </Link>
@@ -114,7 +170,7 @@ export default function StudentResultPage({ params }: PageProps) {
             {Math.floor(attempt.timeSpent / 60)} phút
           </p>
           <span className="text-[10px]" style={{ color: "var(--text-tertiary)" }}>
-            Tốc độ TB: ~{Math.round(attempt.timeSpent / totalCount)}s/câu
+            Tốc độ TB: ~{totalCount > 0 ? Math.round(attempt.timeSpent / totalCount) : 0}s/câu
           </span>
         </div>
       </div>
@@ -129,10 +185,10 @@ export default function StudentResultPage({ params }: PageProps) {
         </h3>
 
         <div className="space-y-4">
-          {questionsList.map((q, idx) => {
-            const studentAns = attempt.answers.find((ans) => ans.questionId === q.id);
+          {questionsList.map((q: any, idx: number) => {
+            const studentAns = attempt.answers.find((ans: any) => ans.questionId === q.id);
             const isCorrect = studentAns?.isCorrect || false;
-            const skipped = !studentAns || studentAns.selectedAnswer === null;
+            const skipped = !studentAns || studentAns.selectedAnswer === "";
             const isExpanded = expandedQId === q.id;
 
             return (
@@ -172,15 +228,21 @@ export default function StudentResultPage({ params }: PageProps) {
                 {/* Answers list */}
                 {q.questionType === "multiple_choice" && q.options ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs mb-3">
-                    {q.options.map((opt) => {
+                    {q.options.map((opt: any) => {
                       const isSelected = studentAns?.selectedAnswer === opt.id;
                       const isCorrectAns = opt.id === q.correctAnswer;
 
                       let borderStyle = "border-[var(--border-subtle)] bg-white";
-                      if (isCorrectAns) {
-                        borderStyle = "border-green-300 bg-green-50/50 text-green-700 font-semibold";
-                      } else if (isSelected && !isCorrect) {
-                        borderStyle = "border-red-300 bg-red-50/50 text-red-700";
+                      if (showSolutions) {
+                        if (isCorrectAns) {
+                          borderStyle = "border-green-300 bg-green-50/50 text-green-700 font-semibold";
+                        } else if (isSelected && !isCorrect) {
+                          borderStyle = "border-red-300 bg-red-50/50 text-red-700";
+                        }
+                      } else {
+                        if (isSelected) {
+                          borderStyle = "border-indigo-300 bg-indigo-50/50 text-indigo-700";
+                        }
                       }
 
                       return (
@@ -193,9 +255,15 @@ export default function StudentResultPage({ params }: PageProps) {
                   </div>
                 ) : (
                   <div className="space-y-1 mb-3 text-xs">
-                    <div className="p-2.5 rounded-xl border border-green-200 bg-green-50/30 text-green-800">
-                      <strong>Đáp án đúng:</strong> <MathRenderer text={q.correctAnswer} />
-                    </div>
+                    {showSolutions ? (
+                      <div className="p-2.5 rounded-xl border border-green-200 bg-green-50/30 text-green-800">
+                        <strong>Đáp án đúng:</strong> <MathRenderer text={q.correctAnswer} />
+                      </div>
+                    ) : (
+                      <div className="p-2.5 rounded-xl border border-gray-200 bg-gray-50/30 text-gray-700">
+                        <strong>Đáp án đúng:</strong> <i>Bị ẩn theo cấu hình bài tập</i>
+                      </div>
+                    )}
                     {!isCorrect && studentAns && (
                       <div className="p-2.5 rounded-xl border border-red-200 bg-red-50/30 text-red-850 mt-1">
                         <strong>Đáp án bạn điền:</strong> <MathRenderer text={studentAns.selectedAnswer || "Bỏ qua"} />
@@ -205,35 +273,38 @@ export default function StudentResultPage({ params }: PageProps) {
                 )}
 
                 <div className="flex justify-between items-center pt-2.5 border-t border-[var(--border-subtle)] text-xs">
-                  <button
-                    onClick={() => setExpandedQId(isExpanded ? null : q.id)}
-                    className="text-indigo-500 font-semibold flex items-center gap-1 hover:underline"
-                  >
-                    {isExpanded ? "Thu gọn lời giải" : "Xem lời giải AI"} {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                  </button>
+                  {showSolutions ? (
+                    <button
+                      onClick={() => setExpandedQId(isExpanded ? null : q.id)}
+                      className="text-indigo-500 font-semibold flex items-center gap-1 hover:underline cursor-pointer"
+                    >
+                      {isExpanded ? "Thu gọn lời giải" : "Xem lời giải chi tiết"} {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                    </button>
+                  ) : (
+                    <span className="text-[var(--text-tertiary)] italic">Đáp án và lời giải bị ẩn theo cấu hình bài tập</span>
+                  )}
                 </div>
 
                 <AnimatePresence>
-                  {isExpanded && (
+                  {isExpanded && showSolutions && (
                     <motion.div
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      className="mt-3 pt-3 border-t border-dashed border-[var(--border-subtle)] space-y-3 overflow-hidden text-xs"
+                      className="mt-3 pt-3 border-t border-dashed border-[var(--border-subtle)] space-y-3 overflow-hidden text-xs text-left"
                     >
                       <div className="p-3.5 rounded-xl bg-green-50/50 border border-green-150/50">
-                        <p className="font-bold text-green-700 mb-1">Lời giải của giáo viên:</p>
+                        <p className="font-bold text-green-700 mb-1">Lời giải chi tiết:</p>
                         <p className="whitespace-pre-line text-green-900 leading-relaxed"><MathRenderer text={q.explanation} /></p>
                       </div>
 
-                      {q.aiExplanation && (
-                        <div className="p-3.5 rounded-xl bg-indigo-50/50 border border-indigo-150/50 text-indigo-900">
-                          <p className="font-bold text-indigo-600 mb-1 flex items-center gap-1">
-                            <Sparkles className="h-3.5 w-3.5" /> Trợ lý AI phân tích:
-                          </p>
-                          <p className="whitespace-pre-line leading-relaxed"><MathRenderer text={q.aiExplanation} /></p>
-                        </div>
-                      )}
+                      <Button
+                        disabled
+                        size="sm"
+                        className="mt-2 text-[10px] rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 flex items-center gap-1 border-none cursor-not-allowed"
+                      >
+                        <Sparkles className="h-3 w-3" /> Hỏi trợ lý AI giải thích thêm (Tính năng sắp ra mắt)
+                      </Button>
                     </motion.div>
                   )}
                 </AnimatePresence>

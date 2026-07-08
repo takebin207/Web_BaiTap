@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   ClipboardList,
@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { mockAssignments, studentAttempts } from "@/data/mock/data";
 import Link from "next/link";
 
 const container = {
@@ -29,11 +28,32 @@ export default function StudentAssignmentsPage() {
   const [activeTab, setActiveTab] = useState<"all" | "pending" | "completed">("all");
   const [searchQuery, setSearchQuery] = useState("");
 
+  const [assignments, setAssignments] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAssignments = async () => {
+      try {
+        const res = await fetch("/api/student/assignments");
+        if (res.ok) {
+          const data = await res.json();
+          setAssignments(data);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchAssignments();
+  }, []);
+
   const getAttemptStatus = (asgnId: string) => {
-    return studentAttempts.find((att) => att.assignmentId === asgnId);
+    const asgn = assignments.find((a) => a.id === asgnId);
+    return asgn?.attempt || null;
   };
 
-  const filteredAssignments = mockAssignments.filter((asgn) => {
+  const filteredAssignments = assignments.filter((asgn) => {
     if (asgn.status === "draft") return false; // Students can't see drafts
 
     const attempt = getAttemptStatus(asgn.id);
@@ -48,6 +68,16 @@ export default function StudentAssignmentsPage() {
 
     return matchesTab && matchesSearch;
   });
+
+  if (isLoading) {
+    return (
+      <div className="rounded-2xl p-12 text-center flex flex-col items-center justify-center border border-[var(--border-default)] bg-[var(--surface-card)]">
+        <p className="text-xs font-semibold text-[var(--text-secondary)] animate-pulse">
+          Đang tải danh sách bài tập...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <motion.div variants={container} initial="hidden" animate="visible" className="space-y-6">

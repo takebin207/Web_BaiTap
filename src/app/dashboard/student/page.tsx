@@ -2,11 +2,6 @@
 
 import { motion } from "framer-motion";
 import {
-  currentStudent,
-  mockAssignments,
-  studentAttempts,
-} from "@/data/mock/data";
-import {
   ClipboardList,
   AlertTriangle,
   Award,
@@ -18,6 +13,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 
 const container = {
   hidden: { opacity: 0 },
@@ -30,15 +27,51 @@ const item = {
 };
 
 export default function StudentDashboard() {
-  const pendingAssignments = mockAssignments.filter(
-    (a) => a.status === "active" && !studentAttempts.some((att) => att.assignmentId === a.id && att.status === "submitted")
+  const { data: session } = useSession();
+  const studentName = session?.user?.name || "Học sinh";
+
+  const [assignments, setAssignments] = useState<any[]>([]);
+  const [attempts, setAttempts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [resAsgns, resAttempts] = await Promise.all([
+          fetch("/api/student/assignments"),
+          fetch("/api/student/attempts"),
+        ]);
+        if (resAsgns.ok && resAttempts.ok) {
+          const dataAsgns = await resAsgns.json();
+          const dataAttempts = await resAttempts.json();
+          setAssignments(dataAsgns);
+          setAttempts(dataAttempts);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const pendingAssignments = assignments.filter((a) => a.status === "active");
+  const completedAttempts = attempts;
+  const totalWrongQuestions = attempts.reduce(
+    (acc, curr) => acc + (curr.answers?.filter((ans: any) => !ans.isCorrect).length || 0),
+    0
   );
 
-  const completedAttempts = studentAttempts.filter((att) => att.status === "graded");
-
-  const totalWrongQuestions = studentAttempts
-    .filter((att) => att.status === "graded")
-    .reduce((acc, curr) => acc + curr.answers.filter((ans) => !ans.isCorrect).length, 0);
+  if (isLoading) {
+    return (
+      <div className="rounded-2xl p-12 text-center flex flex-col items-center justify-center border border-[var(--border-default)] bg-[var(--surface-card)]">
+        <p className="text-xs font-semibold text-[var(--text-secondary)] animate-pulse">
+          Đang tải dữ liệu học tập...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <motion.div variants={container} initial="hidden" animate="visible" className="space-y-6">
@@ -47,7 +80,7 @@ export default function StudentDashboard() {
         <div className="absolute top-0 right-0 -mt-8 -mr-8 h-48 w-48 rounded-full bg-white/10 blur-3xl pointer-events-none" />
         <div className="relative z-10">
           <h2 className="text-2xl font-bold sm:text-3xl">
-            Chào {currentStudent.name}! 👋
+            Chào {studentName}! 👋
           </h2>
           <p className="mt-2 text-white/80 text-sm max-w-xl">
             Hãy tiếp tục làm bài tập được giao và rà soát lại các câu trả lời chưa đúng cùng trợ lý ảo học tập.

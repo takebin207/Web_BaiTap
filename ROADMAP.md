@@ -26,13 +26,17 @@ timeline
 
 ---
 
-## 🚀 Giai đoạn 2: Tích hợp Database & Đăng nhập (Next Sprint)
-* **Mục tiêu:** Thay thế mock-data bằng cơ sở dữ liệu thực.
+## 🚀 Giai đoạn 2: Tích hợp Database & Đăng nhập (Giai đoạn hiện tại)
+* **Mục tiêu:** Từng bước thay thế mock-data bằng cơ sở dữ liệu thực, thiết lập nền tảng hạ tầng backend.
 * **Các nhiệm vụ chính:**
-  1. Cấu hình **Prisma ORM** và kết nối tới database **PostgreSQL**.
-  2. Thiết kế lược đồ (Schema) cho lớp học, bài tập, câu hỏi Toán 10 và các lượt nộp bài.
-  3. Cài đặt **Auth.js (NextAuth v5)** phân quyền Giáo viên và Học sinh.
-  4. Triển khai API lưu trữ kết quả và chấm điểm tự động.
+  - [x] Thiết lập **Prisma ORM** và kết nối cơ sở dữ liệu **PostgreSQL** (Backend Foundation v1).
+  - [x] Thiết kế và khởi tạo lược đồ cơ sở dữ liệu (User, Classroom, ClassEnrollment, Question, Assignment, Attempt, AttemptAnswer, WrongQuestionReview) kèm dữ liệu mẫu Toán 10.
+  - [x] Triển khai API CRUD Ngân hàng câu hỏi v1 và tích hợp vào giao diện giáo viên.
+  - [x] Triển khai API quản lý lớp học, bài tập (Assignment Builder v1) và tích hợp giao diện giáo viên (danh sách bài tập & chi tiết đề thi).
+  - [x] Cài đặt **Auth.js (NextAuth v5)** phân quyền Giáo viên và Học sinh.
+  - [x] Xây dựng luồng nộp bài và chấm điểm tự động tích hợp DB (Student Attempt v1).
+  - [x] Kết nối giao diện làm bài (Practice UI) và xem kết quả của Học sinh với dữ liệu DB.
+  - [x] Tích hợp **next-themes** và **ThemeProvider** hỗ trợ giao diện Sáng/Tối (Dark Mode Foundation).
 
 ---
 

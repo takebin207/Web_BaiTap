@@ -33,18 +33,25 @@ Bản mẫu hiện tại là một ứng dụng **Next.js 15** sử dụng **Rea
 
 ---
 
-## 3. Các tính năng chưa triển khai ở Giai đoạn 1
+## 3. Các tính năng đã và đang triển khai (Backend Foundation & CRUD v1)
 
-* **Database (PostgreSQL / Prisma):** Chưa kết nối cơ sở dữ liệu thực tế.
-* **Gemini API:** Chưa gọi API thực tế để giải thích câu hỏi hoặc sinh câu hỏi tương tự.
+* **Database (PostgreSQL & Prisma ORM) [ĐÃ HOÀN THÀNH]:** Thiết lập Prisma, lược đồ quan hệ đầy đủ (User, Classroom, ClassEnrollment, Question, Assignment, Attempt, AttemptAnswer, WrongQuestionReview) và kịch bản Seed dữ liệu Toán 10.
+* **Kiến trúc Clean Architecture [ĐÃ HOÀN THÀNH]:** Bố cục thư mục `src/server/repositories`, `src/server/services`, `src/types`, và Prisma Client helper.
+* **Question Bank CRUD v1 [ĐÃ HOÀN THÀNH]:** Triển khai tầng lưu trữ (Repository), nghiệp vụ (Service), các đầu API `/api/tutor/questions` và tích hợp giao diện quản trị ngân hàng câu hỏi (đọc, thêm mới, sửa đổi, và xóa/ẩn an toàn).
+* **Assignment Builder v1 [ĐÃ HOÀN THÀNH]:** Triển khai API giao bài `/api/tutor/assignments` cùng các tầng Repository & Service. Đồng bộ hóa quy trình chọn câu hỏi từ Ngân hàng, cấu hình các trường bài tập, xuất bản bài tập (giao bài hoặc lưu nháp) và trang chi tiết đề thi dành cho giáo viên.
+* **Authentication (Auth.js v5) [ĐÃ HOÀN THÀNH]:** Phân quyền Giáo viên và Học sinh sử dụng JWT Session với giao diện Đăng nhập mẫu cao cấp.
+* **Student Attempt v1 [ĐÃ HOÀN THÀNH]:** Hệ thống hóa luồng làm bài và nộp bài dựa trên DB. Học sinh có thể xem trang chi tiết bài tập, bắt đầu/tiếp tục làm bài (lưu trạng thái `IN_PROGRESS` vào DB), làm bài có đếm giờ và nộp bài để chấm trắc nghiệm tự động (lưu trạng thái `GRADED` cùng các câu trả lời vào `AttemptAnswer` trong DB).
+
+## 4. Các tính năng chưa triển khai (Future Phases)
+
+* **Gemini API:** Chưa gọi API thực tế để giải thích câu hỏi hoặc sinh câu hỏi tương tự (sẽ tích hợp ở Phase sau).
 * **OCR PDF/Word:** Chưa tích hợp Vision API hoặc Document AI để đọc tệp tải lên thực tế.
-* **Authentication:** Đăng nhập vẫn là giả lập chuyển vai trò.
+* **Wrong Question Review v1:** Sổ tay lưu câu sai sẽ được tinh chỉnh hoàn thiện ở sprint tiếp theo để hỗ trợ các báo cáo sâu hơn.
 
 ---
 
-## 4. Kế hoạch hành động cho Giai đoạn 2
+## 5. Kế hoạch hành động tiếp theo
 
-1. Thiết lập **Prisma ORM** và kết nối tới cơ sở dữ liệu **PostgreSQL**.
-2. Thiết kế lược đồ (Schema) cho lớp học, bài tập, câu hỏi Toán 10 và các lượt nộp bài.
-3. Cài đặt **Auth.js (NextAuth v5)** phân quyền Giáo viên và Học sinh.
-4. Triển khai API lưu trữ kết quả và chấm điểm tự động.
+1. Tích hợp Google Gemini API để giải thích lời giải chi tiết cho câu sai của học sinh.
+2. Xây dựng thuật toán AI tự động gợi ý đề thi ôn tập tương tự dựa trên lịch sử câu sai của học sinh.
+3. Hoàn thiện các giao diện báo cáo chuyên sâu của giáo viên liên quan đến dữ liệu lượt làm bài thực tế trong DB.

@@ -52,4 +52,9 @@ Hệ thống được thiết kế theo 4 lớp cốt lõi:
 ### 4. Tầng Infrastructure
 * **Công nghệ:** PostgreSQL, Prisma ORM, Auth.js (NextAuth v5).
 * **Đặc điểm:** Quản lý kết nối DB, phân quyền vai trò (Giáo viên, Học sinh).
+* **Prisma Client Helper:** Triển khai cơ chế Singleton tại [prisma.ts](file:///d:/Web_BaiTap/ai-learning-platform/src/lib/prisma.ts) giúp quản lý và tái sử dụng kết nối cơ sở dữ liệu an toàn, ngăn chặn việc tạo thừa kết nối trong quá trình hot-reload khi phát triển trên môi trường Local.
+* **Tổ chức thư mục Backend:** Cấu trúc theo mô hình phân lớp sạch (Clean Architecture):
+  - `src/server/repositories/`: Lớp thao tác cơ sở dữ liệu trực tiếp thông qua Prisma.
+  - `src/server/services/`: Lớp xử lý nghiệp vụ chính của ứng dụng.
+  - `src/types/`: Các kiểu dữ liệu tùy chỉnh.
 * **Tối ưu hóa chi phí AI:** Tích hợp bộ đệm cache cho lời giải câu hỏi. Các câu hỏi có cùng ID hoặc dạng tương đương đã được AI sinh lời giải sẽ được lưu lại để tái sử dụng, giúp giảm thiểu 95% chi phí gọi token API.

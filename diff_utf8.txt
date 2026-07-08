@@ -1,0 +1,1316 @@
+diff --git a/src/app/dashboard/layout.tsx b/src/app/dashboard/layout.tsx
+index 741bb55..4828c0d 100644
+--- a/src/app/dashboard/layout.tsx
++++ b/src/app/dashboard/layout.tsx
+@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
+ import { AnimatePresence, motion } from "framer-motion";
+ import { Sidebar } from "@/components/layout/sidebar";
+ import { Topbar } from "@/components/layout/topbar";
++import { AlertCircle, X } from "lucide-react";
+ 
+ export default function DashboardLayout({
+   children,
+@@ -14,6 +15,7 @@ export default function DashboardLayout({
+   const pathname = usePathname();
+   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
++  const [showBanner, setShowBanner] = useState(true);
+ 
+   // Determine role from pathname
+   const role: "student" | "tutor" | "admin" = pathname.includes("/dashboard/tutor")
+@@ -65,6 +67,25 @@ export default function DashboardLayout({
+           isMobileMenuOpen={mobileMenuOpen}
+         />
+         <main className="flex-1 overflow-y-auto">
++          {showBanner && (
++            <div className="mx-auto max-w-7xl px-4 pt-4 sm:px-6 lg:px-8">
++              <div className="rounded-xl p-3 flex items-start sm:items-center justify-between text-[11px] sm:text-xs font-medium border border-indigo-100 bg-indigo-50/45 text-indigo-800 shadow-sm gap-3">
++                <div className="flex items-center gap-2">
++                  <AlertCircle className="h-4 w-4 text-indigo-600 shrink-0" />
++                  <span>
++                    <strong>Bản thử nghiệm (Prototype):</strong> Giao diện hoạt động hoàn toàn bằng dữ liệu giả lập. Database và AI Engine thực tế sẽ được tích hợp ở chặng sau.
++                  </span>
++                </div>
++                <button
++                  onClick={() => setShowBanner(false)}
++                  className="p-1 rounded-lg hover:bg-indigo-100 text-indigo-500 hover:text-indigo-700 cursor-pointer shrink-0"
++                  aria-label="Đóng thông báo"
++                >
++                  <X className="h-3.5 w-3.5" />
++                </button>
++              </div>
++            </div>
++          )}
+           <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+             {children}
+           </div>
+diff --git a/src/app/dashboard/student/assignments/[id]/page.tsx b/src/app/dashboard/student/assignments/[id]/page.tsx
+index 99bb8f3..12b92e3 100644
+--- a/src/app/dashboard/student/assignments/[id]/page.tsx
++++ b/src/app/dashboard/student/assignments/[id]/page.tsx
+@@ -1,19 +1,25 @@
+ "use client";
+ 
+-import { use, useState, useEffect } from "react";
+-import { motion } from "framer-motion";
++import { use, useState, useEffect, useMemo } from "react";
++import { motion, AnimatePresence } from "framer-motion";
+ import {
+   ArrowLeft,
+   Clock,
+   Sparkles,
+   Save,
++  ClipboardList,
+ } from "lucide-react";
+ import { Button } from "@/components/ui/button";
+ import { Badge } from "@/components/ui/badge";
+-import { mockAssignments, questionBank } from "@/data/mock/data";
++import { mockAssignments, questionBank, StudentAttempt } from "@/data/mock/data";
+ import Link from "next/link";
+ import { useRouter } from "next/navigation";
+ import MathRenderer from "@/components/ui/math-renderer";
++import {
++  getLocalStorageAssignments,
++  getLocalStorageQuestions,
++  addOrUpdateAttempt
++} from "@/data/mock/store";
+ 
+ interface PageProps {
+   params: Promise<{ id: string }>;
+@@ -23,14 +29,31 @@ export default function StudentPracticeSessionPage({ params }: PageProps) {
+   const router = useRouter();
+   const { id } = use(params);
+ 
+-  const assignment = mockAssignments.find((a) => a.id === id) || mockAssignments[0];
+-  const questionsList = questionBank.filter((q) => q.status === "READY" && q.chapterId === "chap-1"); // Use Math 10 chap 1 questions
++  const [assignments] = useState(() => getLocalStorageAssignments());
++  const assignment = assignments.find((a) => a.id === id) || assignments[0];
++
++  const questionsList = useMemo(() => {
++    try {
++      const stored = localStorage.getItem(`estudy_asgn_questions_${id}`);
++      if (stored) return JSON.parse(stored);
++    } catch (e) {}
++
++    const bank = getLocalStorageQuestions();
++    if (assignment && (assignment as any).questionIds && (assignment as any).questionIds.length > 0) {
++      const ids: string[] = (assignment as any).questionIds;
++      const matched = bank.filter(q => ids.includes(q.id));
++      if (matched.length > 0) return matched;
++    }
++
++    return bank.filter((q) => q.subjectId === "math" && q.status === "READY");
++  }, [id, assignment]);
+ 
+   // Active question index
+   const [activeIdx, setActiveIdx] = useState(0);
+   const [answers, setAnswers] = useState<Record<string, string>>({});
+   const [timeLeft, setTimeLeft] = useState(assignment.timeLimit * 60); // seconds
+   const [saveStatus, setSaveStatus] = useState("Đã lưu tự động");
++  const [showConfirmModal, setShowConfirmModal] = useState(false);
+ 
+   // Timer countdown mock
+   useEffect(() => {
+@@ -50,16 +73,47 @@ export default function StudentPracticeSessionPage({ params }: PageProps) {
+   };
+ 
+   const handleFinish = () => {
+-    const answeredCount = Object.keys(answers).length;
+-    const totalCount = questionsList.length;
++    setShowConfirmModal(true);
++  };
+ 
+-    const confirmSubmit = window.confirm(
+-      `Bạn đã trả lời ${answeredCount}/${totalCount} câu hỏi. Bạn có chắc chắn muốn nộp bài?`
+-    );
+-    if (confirmSubmit) {
+-      alert("Nộp bài thành công!");
++  const confirmSubmit = () => {
++    setShowConfirmModal(false);
++    const attemptAnswers = questionsList.map((q: any) => {
++        const selected = answers[q.id] || null;
++        const isCorrect =
++          selected !== null &&
++          selected.toString().toLowerCase().trim() ===
++            q.correctAnswer.toString().toLowerCase().trim();
++        return {
++          questionId: q.id,
++          selectedAnswer: selected,
++          isCorrect,
++          timeSpent: Math.round((assignment.timeLimit * 60) / questionsList.length),
++        };
++      });
++
++      const score = attemptAnswers.filter((ans: any) => ans.isCorrect).length;
++      const timeSpentSecs = assignment.timeLimit * 60 - timeLeft;
++
++      const newAttempt: StudentAttempt = {
++        id: `attempt-${id}-${Date.now()}`,
++        assignmentId: assignment.id,
++        assignmentTitle: assignment.title,
++        className: assignment.className,
++        subject: "Toán 10",
++        studentId: "std-001",
++        studentName: "Nguyễn Văn Học",
++        answers: attemptAnswers,
++        score: score,
++        totalQuestions: questionsList.length,
++        timeSpent: timeSpentSecs,
++        submittedAt: new Date().toISOString(),
++        status: "graded",
++      };
++
++      addOrUpdateAttempt(newAttempt);
++      alert("Nộp bài thành công! Điểm số của bạn đã được ghi nhận.");
+       router.push(`/dashboard/student/assignments/${assignment.id}/result`);
+-    }
+   };
+ 
+   const formatTime = (secs: number) => {
+@@ -104,8 +158,17 @@ export default function StudentPracticeSessionPage({ params }: PageProps) {
+         {/* Timer & Autosave Status */}
+         <div className="flex items-center gap-4 self-end sm:self-center">
+           <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "var(--text-secondary)" }}>
+-            <Save className="h-3.5 w-3.5 text-indigo-500" />
+-            <span className="text-[10px] text-emerald-500 font-medium">{saveStatus}</span>
++            {saveStatus === "Đang lưu..." ? (
++              <span className="flex h-2 w-2 relative">
++                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
++                <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
++              </span>
++            ) : (
++              <span className="flex h-2 w-2 relative">
++                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
++              </span>
++            )}
++            <span className="text-[10px] text-emerald-600 font-medium">{saveStatus}</span>
+           </div>
+ 
+           <Badge className="bg-red-50 text-red-700 border-red-100 px-3 py-1 text-xs font-mono flex items-center gap-1.5">
+@@ -148,7 +211,7 @@ export default function StudentPracticeSessionPage({ params }: PageProps) {
+             {/* Multiple Choice Options or short answer */}
+             {activeQuestion.questionType === "multiple_choice" && activeQuestion.options ? (
+               <div className="space-y-3">
+-                {activeQuestion.options.map((opt) => {
++                {activeQuestion.options.map((opt: any) => {
+                   const isSelected = answers[activeQuestion.id] === opt.id;
+                   return (
+                     <button
+@@ -200,7 +263,7 @@ export default function StudentPracticeSessionPage({ params }: PageProps) {
+               Bản đồ câu hỏi
+             </h3>
+             <div className="grid grid-cols-5 gap-2">
+-              {questionsList.map((q, idx) => {
++              {questionsList.map((q: any, idx: number) => {
+                 const isAnswered = !!answers[q.id];
+                 const isActive = idx === activeIdx;
+ 
+@@ -251,6 +314,69 @@ export default function StudentPracticeSessionPage({ params }: PageProps) {
+           </div>
+         </div>
+       </div>
++
++      {/* Custom Confirm Modal */}
++      <AnimatePresence>
++        {showConfirmModal && (
++          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
++            <motion.div
++              initial={{ scale: 0.95, opacity: 0 }}
++              animate={{ scale: 1, opacity: 1 }}
++              exit={{ scale: 0.95, opacity: 0 }}
++              className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-5 text-center text-xs"
++            >
++              <div className="flex flex-col items-center justify-center space-y-2">
++                <div className="h-10 w-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
++                  <ClipboardList className="h-5 w-5" />
++                </div>
++                <h3 className="text-sm font-bold text-[var(--text-primary)]">
++                  Nộp bài làm trực tuyến
++                </h3>
++                <p className="text-[10px] text-[var(--text-tertiary)] max-w-xs leading-relaxed">
++                  Bạn đang chuẩn bị nộp bài làm của mình. Hãy kiểm tra kỹ các câu hỏi trước khi nộp.
++                </p>
++              </div>
++
++              <div className="p-4 rounded-xl bg-[var(--surface-subtle)] text-left space-y-2 border border-[var(--border-subtle)] text-[11px] text-[var(--text-secondary)]">
++                <div className="flex justify-between">
++                  <span>Tổng số câu hỏi:</span>
++                  <span className="font-bold text-[var(--text-primary)]">{questionsList.length} câu</span>
++                </div>
++                <div className="flex justify-between">
++                  <span>Đã trả lời:</span>
++                  <span className="font-bold text-emerald-600">{Object.keys(answers).length} câu</span>
++                </div>
++                <div className="flex justify-between">
++                  <span>Chưa trả lời (bỏ qua):</span>
++                  <span className={`font-bold ${questionsList.length - Object.keys(answers).length > 0 ? "text-amber-500 font-semibold" : "text-[var(--text-primary)]"}`}>
++                    {questionsList.length - Object.keys(answers).length} câu
++                  </span>
++                </div>
++                <div className="flex justify-between border-t border-[var(--border-subtle)] pt-2 mt-2">
++                  <span>Thời gian làm bài còn lại:</span>
++                  <span className="font-bold text-red-500">{formatTime(timeLeft)}</span>
++                </div>
++              </div>
++
++              <div className="flex gap-3 pt-2">
++                <Button
++                  onClick={() => setShowConfirmModal(false)}
++                  variant="outline"
++                  className="flex-1 rounded-xl border-[var(--border-default)] text-[var(--text-secondary)] py-2 text-[10px] cursor-pointer"
++                >
++                  Quay lại làm tiếp
++                </Button>
++                <Button
++                  onClick={confirmSubmit}
++                  className="flex-1 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 text-[10px] cursor-pointer"
++                >
++                  Nộp bài ngay
++                </Button>
++              </div>
++            </motion.div>
++          </div>
++        )}
++      </AnimatePresence>
+     </div>
+   );
+ }
+diff --git a/src/app/dashboard/student/assignments/[id]/result/page.tsx b/src/app/dashboard/student/assignments/[id]/result/page.tsx
+index a2204b8..3d2eac2 100644
+--- a/src/app/dashboard/student/assignments/[id]/result/page.tsx
++++ b/src/app/dashboard/student/assignments/[id]/result/page.tsx
+@@ -1,6 +1,6 @@
+ "use client";
+ 
+-import { use, useState } from "react";
++import { use, useState, useMemo } from "react";
+ import { motion, AnimatePresence } from "framer-motion";
+ import {
+   ArrowLeft,
+@@ -15,6 +15,11 @@ import { Button } from "@/components/ui/button";
+ import { Badge } from "@/components/ui/badge";
+ import { mockAssignments, questionBank, studentAttempts } from "@/data/mock/data";
+ import Link from "next/link";
++import {
++  getLocalStorageAssignments,
++  getLocalStorageAttempts,
++  getLocalStorageQuestions
++} from "@/data/mock/store";
+ import MathRenderer from "@/components/ui/math-renderer";
+ 
+ interface PageProps {
+@@ -25,11 +30,35 @@ export default function StudentResultPage({ params }: PageProps) {
+   const { id } = use(params);
+   const [expandedQId, setExpandedQId] = useState<string | null>(null);
+ 
+-  const assignment = mockAssignments.find((a) => a.id === id) || mockAssignments[0];
+-  const attempt = studentAttempts.find((att) => att.assignmentId === id) || studentAttempts[0];
++  const [assignments] = useState(() => getLocalStorageAssignments());
++  const [attempts] = useState(() => getLocalStorageAttempts());
++
++  const assignment = assignments.find((a) => a.id === id) || assignments[0];
++  const attempt = attempts.find((att) => att.assignmentId === id) || 
++                  attempts.find((att) => att.assignmentId === assignment.id) ||
++                  attempts[0];
+   
+-  // Use Math 10 questions that match subject
+-  const questionsList = questionBank.filter((q) => q.status === "READY" && q.subjectId === "math");
++  const questionsList = useMemo(() => {
++    try {
++      const stored = localStorage.getItem(`estudy_asgn_questions_${id}`);
++      if (stored) return JSON.parse(stored);
++    } catch (e) {}
++
++    const bank = getLocalStorageQuestions();
++    if (assignment && (assignment as any).questionIds && (assignment as any).questionIds.length > 0) {
++      const ids: string[] = (assignment as any).questionIds;
++      const matched = bank.filter(q => ids.includes(q.id));
++      if (matched.length > 0) return matched;
++    }
++
++    if (attempt && attempt.answers) {
++      const ansIds = attempt.answers.map(ans => ans.questionId);
++      const matched = bank.filter(q => ansIds.includes(q.id));
++      if (matched.length > 0) return matched;
++    }
++
++    return bank.filter((q) => q.status === "READY" && q.subjectId === "math");
++  }, [id, assignment, attempt]);
+ 
+   const correctCount = attempt.score;
+   const totalCount = attempt.totalQuestions;
+@@ -129,8 +158,8 @@ export default function StudentResultPage({ params }: PageProps) {
+         </h3>
+ 
+         <div className="space-y-4">
+-          {questionsList.map((q, idx) => {
+-            const studentAns = attempt.answers.find((ans) => ans.questionId === q.id);
++          {questionsList.map((q: any, idx: number) => {
++            const studentAns = attempt.answers.find((ans: any) => ans.questionId === q.id);
+             const isCorrect = studentAns?.isCorrect || false;
+             const skipped = !studentAns || studentAns.selectedAnswer === null;
+             const isExpanded = expandedQId === q.id;
+@@ -172,7 +201,7 @@ export default function StudentResultPage({ params }: PageProps) {
+                 {/* Answers list */}
+                 {q.questionType === "multiple_choice" && q.options ? (
+                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs mb-3">
+-                    {q.options.map((opt) => {
++                    {q.options.map((opt: any) => {
+                       const isSelected = studentAns?.selectedAnswer === opt.id;
+                       const isCorrectAns = opt.id === q.correctAnswer;
+ 
+diff --git a/src/app/dashboard/student/assignments/page.tsx b/src/app/dashboard/student/assignments/page.tsx
+index 3b60f5e..1f7f846 100644
+--- a/src/app/dashboard/student/assignments/page.tsx
++++ b/src/app/dashboard/student/assignments/page.tsx
+@@ -12,7 +12,8 @@ import {
+ } from "lucide-react";
+ import { Button } from "@/components/ui/button";
+ import { Badge } from "@/components/ui/badge";
+-import { mockAssignments, studentAttempts } from "@/data/mock/data";
++import { AssignmentSummary, StudentAttempt } from "@/data/mock/data";
++import { getLocalStorageAssignments, getLocalStorageAttempts } from "@/data/mock/store";
+ import Link from "next/link";
+ 
+ const container = {
+@@ -29,11 +30,14 @@ export default function StudentAssignmentsPage() {
+   const [activeTab, setActiveTab] = useState<"all" | "pending" | "completed">("all");
+   const [searchQuery, setSearchQuery] = useState("");
+ 
++  const [assignments] = useState<AssignmentSummary[]>(() => getLocalStorageAssignments());
++  const [attempts] = useState<StudentAttempt[]>(() => getLocalStorageAttempts());
++
+   const getAttemptStatus = (asgnId: string) => {
+-    return studentAttempts.find((att) => att.assignmentId === asgnId);
++    return attempts.find((att) => att.assignmentId === asgnId);
+   };
+ 
+-  const filteredAssignments = mockAssignments.filter((asgn) => {
++  const filteredAssignments = assignments.filter((asgn) => {
+     if (asgn.status === "draft") return false; // Students can't see drafts
+ 
+     const attempt = getAttemptStatus(asgn.id);
+diff --git a/src/app/dashboard/student/page.tsx b/src/app/dashboard/student/page.tsx
+index 63d99bd..12a2e84 100644
+--- a/src/app/dashboard/student/page.tsx
++++ b/src/app/dashboard/student/page.tsx
+@@ -3,8 +3,6 @@
+ import { motion } from "framer-motion";
+ import {
+   currentStudent,
+-  mockAssignments,
+-  studentAttempts,
+ } from "@/data/mock/data";
+ import {
+   ClipboardList,
+@@ -19,6 +17,12 @@ import { Button } from "@/components/ui/button";
+ import { Badge } from "@/components/ui/badge";
+ import Link from "next/link";
+ 
++import {
++  getLocalStorageAssignments,
++  getLocalStorageAttempts,
++} from "@/data/mock/store";
++import { useState } from "react";
++
+ const container = {
+   hidden: { opacity: 0 },
+   visible: { opacity: 1, transition: { staggerChildren: 0.05 } },
+@@ -30,13 +34,16 @@ const item = {
+ };
+ 
+ export default function StudentDashboard() {
+-  const pendingAssignments = mockAssignments.filter(
+-    (a) => a.status === "active" && !studentAttempts.some((att) => att.assignmentId === a.id && att.status === "submitted")
++  const [assignments] = useState(() => getLocalStorageAssignments());
++  const [attempts] = useState(() => getLocalStorageAttempts());
++
++  const pendingAssignments = assignments.filter(
++    (a) => a.status === "active" && !attempts.some((att) => att.assignmentId === a.id && att.status === "graded")
+   );
+ 
+-  const completedAttempts = studentAttempts.filter((att) => att.status === "graded");
++  const completedAttempts = attempts.filter((att) => att.status === "graded");
+ 
+-  const totalWrongQuestions = studentAttempts
++  const totalWrongQuestions = attempts
+     .filter((att) => att.status === "graded")
+     .reduce((acc, curr) => acc + curr.answers.filter((ans) => !ans.isCorrect).length, 0);
+ 
+diff --git a/src/app/dashboard/student/results/page.tsx b/src/app/dashboard/student/results/page.tsx
+index c71c4fc..25b3023 100644
+--- a/src/app/dashboard/student/results/page.tsx
++++ b/src/app/dashboard/student/results/page.tsx
+@@ -10,8 +10,10 @@ import {
+ } from "lucide-react";
+ import { Button } from "@/components/ui/button";
+ import { Badge } from "@/components/ui/badge";
+-import { studentAttempts } from "@/data/mock/data";
++import { getLocalStorageAttempts } from "@/data/mock/store";
++import { StudentAttempt } from "@/data/mock/data";
+ import Link from "next/link";
++import { useState } from "react";
+ 
+ const container = {
+   hidden: { opacity: 0 },
+@@ -24,7 +26,8 @@ const item = {
+ };
+ 
+ export default function StudentResultsHistoryPage() {
+-  const gradedAttempts = studentAttempts.filter((att) => att.status === "graded");
++  const [attempts] = useState<StudentAttempt[]>(() => getLocalStorageAttempts());
++  const gradedAttempts = attempts.filter((att) => att.status === "graded");
+ 
+   return (
+     <motion.div variants={container} initial="hidden" animate="visible" className="space-y-6">
+diff --git a/src/app/dashboard/student/wrong-questions/page.tsx b/src/app/dashboard/student/wrong-questions/page.tsx
+index f9e5c8d..a741b28 100644
+--- a/src/app/dashboard/student/wrong-questions/page.tsx
++++ b/src/app/dashboard/student/wrong-questions/page.tsx
+@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
+ import { Badge } from "@/components/ui/badge";
+ import { questionBank, studentAttempts } from "@/data/mock/data";
+ import MathRenderer from "@/components/ui/math-renderer";
++import { getLocalStorageAttempts } from "@/data/mock/store";
+ 
+ const container = {
+   hidden: { opacity: 0 },
+@@ -29,8 +30,10 @@ export default function StudentWrongQuestionsPage() {
+   const [selectedAsgnId, setSelectedAsgnId] = useState("All");
+   const [expandedQId, setExpandedQId] = useState<string | null>(null);
+ 
++  const [attempts] = useState(() => getLocalStorageAttempts());
++
+   // Filter attempts
+-  const gradedAttempts = studentAttempts.filter((att) => att.status === "graded");
++  const gradedAttempts = attempts.filter((att) => att.status === "graded");
+ 
+   // Collect wrong questions
+   const wrongAnswersList = gradedAttempts.flatMap((att) => {
+diff --git a/src/app/dashboard/tutor/assignments/create/page.tsx b/src/app/dashboard/tutor/assignments/create/page.tsx
+index d714940..075058f 100644
+--- a/src/app/dashboard/tutor/assignments/create/page.tsx
++++ b/src/app/dashboard/tutor/assignments/create/page.tsx
+@@ -1,6 +1,6 @@
+ "use client";
+ 
+-import { useState } from "react";
++import { useState, useEffect } from "react";
+ import { motion, AnimatePresence } from "framer-motion";
+ import {
+   ArrowLeft,
+@@ -14,10 +14,12 @@ import {
+   Sparkles,
+   CheckCircle,
+   X,
++  CheckCircle2,
+ } from "lucide-react";
+ import { Button } from "@/components/ui/button";
+ import { Badge } from "@/components/ui/badge";
+-import { tutorClasses, sampleChapters } from "@/data/mock/data";
++import { tutorClasses, sampleChapters, mockAssignments } from "@/data/mock/data";
++import { getLocalStorageQuestions, addAssignment } from "@/data/mock/store";
+ import Link from "next/link";
+ 
+ const container = {
+@@ -38,6 +40,43 @@ export default function CreateAssignmentPage() {
+   const [showSolutions, setShowSolutions] = useState(true);
+   const [questions, setQuestions] = useState<Array<{ id: string; content: string; difficulty: string; chapterId: string }>>([]);
+ 
++  const [showSuccess, setShowSuccess] = useState(false);
++  const [successData, setSuccessData] = useState<{
++    id: string;
++    title: string;
++    questionsCount: number;
++    timeLimit: number;
++    className: string;
++    dueDate: string;
++  } | null>(null);
++
++  // Load selected questions from localStorage
++  useEffect(() => {
++    if (typeof window === "undefined") return;
++    try {
++      const storedIdsStr = localStorage.getItem("estudy_selected_question_ids");
++      if (storedIdsStr) {
++        const storedIds: string[] = JSON.parse(storedIdsStr);
++        if (storedIds.length > 0) {
++          const bank = getLocalStorageQuestions();
++          const matched = bank.filter((q) => storedIds.includes(q.id));
++          if (matched.length > 0) {
++            const mapped = matched.map((q) => ({
++              id: q.id,
++              content: q.content,
++              difficulty: q.difficulty,
++              chapterId: q.chapterId,
++            }));
++            setQuestions(mapped);
++          }
++          localStorage.removeItem("estudy_selected_question_ids");
++        }
++      }
++    } catch (e) {
++      console.error(e);
++    }
++  }, []);
++
+   // Auto-generation parameters
+   const [showAutoStructure, setShowAutoStructure] = useState(false);
+   const [structureParams, setStructureParams] = useState({
+@@ -156,11 +195,53 @@ export default function CreateAssignmentPage() {
+       alert("Vui lòng chọn ít nhất một lớp học!");
+       return;
+     }
+-    alert(
+-      `Đã giao bài tập thành công! Bài kiểm tra Toán 10 '${title}' được phát hành cho lớp: ${selectedClasses.join(
+-        ", "
+-      )}.`
+-    );
++    if (questions.length === 0) {
++      alert("Vui lòng thêm ít nhất một câu hỏi!");
++      return;
++    }
++
++    const assignedClassName = selectedClasses
++      .map((cid) => tutorClasses.find((c) => c.id === cid)?.name || cid)
++      .join(", ");
++
++    const newAssignmentId = `asgn-${Date.now()}`;
++    const newAsgn = {
++      id: newAssignmentId,
++      title: title,
++      classId: selectedClasses[0],
++      className: assignedClassName,
++      subject: "Toán 10",
++      questionCount: questions.length,
++      timeLimit: timeLimit,
++      dueDate: dueDate,
++      showSolutionsAfterSubmit: showSolutions,
++      status: status === "active" ? ("active" as const) : ("draft" as const),
++      submittedCount: 0,
++      totalStudents: selectedClasses.reduce(
++        (sum, cid) => sum + (tutorClasses.find((c) => c.id === cid)?.studentCount || 12),
++        0
++      ),
++      createdAt: new Date().toISOString(),
++      questionIds: questions.map((q) => q.id),
++    };
++
++    addAssignment(newAsgn);
++
++    try {
++      localStorage.setItem(`estudy_asgn_questions_${newAssignmentId}`, JSON.stringify(questions));
++    } catch (e) {
++      console.error(e);
++    }
++
++    setSuccessData({
++      id: newAssignmentId,
++      title: title,
++      questionsCount: questions.length,
++      timeLimit: timeLimit,
++      className: assignedClassName,
++      dueDate: new Date(dueDate).toLocaleString("vi-VN"),
++    });
++    setShowSuccess(true);
+   };
+ 
+   return (
+@@ -570,6 +651,53 @@ export default function CreateAssignmentPage() {
+           </div>
+         )}
+       </AnimatePresence>
++
++      {/* Success Dialog overlay */}
++      <AnimatePresence>
++        {showSuccess && successData && (
++          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
++            <motion.div
++              initial={{ scale: 0.95, opacity: 0 }}
++              animate={{ scale: 1, opacity: 1 }}
++              exit={{ scale: 0.95, opacity: 0 }}
++              className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-5 text-center text-xs"
++            >
++              <div className="flex flex-col items-center justify-center space-y-2">
++                <div className="h-12 w-12 rounded-full bg-green-50 flex items-center justify-center text-green-500">
++                  <CheckCircle2 className="h-7 w-7" />
++                </div>
++                <h3 className="text-base font-bold text-green-600">
++                  Giao bài tập thành công!
++                </h3>
++                <p className="text-[11px] text-[var(--text-tertiary)] max-w-xs">
++                  Bài tập Toán 10 đã được giao cho học sinh. Các em có thể bắt đầu làm bài trực tuyến ngay lập tức.
++                </p>
++              </div>
++
++              <div className="p-4 rounded-xl bg-[var(--surface-subtle)] text-left space-y-2 border border-[var(--border-subtle)] text-[11px] text-[var(--text-secondary)]">
++                <div>Tiêu đề: <strong className="text-[var(--text-primary)]">{successData.title}</strong></div>
++                <div>Lớp học nhận: <span className="font-semibold text-[var(--text-primary)]">{successData.className}</span></div>
++                <div>Số câu hỏi: <span className="font-semibold">{successData.questionsCount} câu</span></div>
++                <div>Thời gian làm bài: <span className="font-semibold">{successData.timeLimit} phút</span></div>
++                <div>Hạn nộp bài: <span className="font-semibold text-red-500">{successData.dueDate}</span></div>
++              </div>
++
++              <div className="flex flex-col gap-2 pt-2">
++                <Link href={`/dashboard/student/assignments/${successData.id}`} className="w-full">
++                  <Button className="w-full rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 cursor-pointer">
++                    👉 Xem giao diện học sinh làm bài (Preview)
++                  </Button>
++                </Link>
++                <Link href="/dashboard/tutor/assignments" className="w-full">
++                  <Button variant="outline" className="w-full rounded-xl border-[var(--border-default)] text-[var(--text-secondary)] py-2 cursor-pointer">
++                    Về trang Quản lý bài tập
++                  </Button>
++                </Link>
++              </div>
++            </motion.div>
++          </div>
++        )}
++      </AnimatePresence>
+     </motion.div>
+   );
+ }
+diff --git a/src/app/dashboard/tutor/assignments/page.tsx b/src/app/dashboard/tutor/assignments/page.tsx
+index d604821..af4b341 100644
+--- a/src/app/dashboard/tutor/assignments/page.tsx
++++ b/src/app/dashboard/tutor/assignments/page.tsx
+@@ -13,7 +13,8 @@ import {
+ } from "lucide-react";
+ import { Button } from "@/components/ui/button";
+ import { Badge } from "@/components/ui/badge";
+-import { mockAssignments } from "@/data/mock/data";
++import { getLocalStorageAssignments } from "@/data/mock/store";
++import { AssignmentSummary } from "@/data/mock/data";
+ import Link from "next/link";
+ 
+ const container = {
+@@ -29,8 +30,9 @@ const item = {
+ export default function AssignmentsPage() {
+   const [activeTab, setActiveTab] = useState<"all" | "active" | "draft" | "closed" | "graded">("all");
+   const [searchQuery, setSearchQuery] = useState("");
++  const [assignments] = useState<AssignmentSummary[]>(() => getLocalStorageAssignments());
+ 
+-  const filteredAssignments = mockAssignments.filter((asgn) => {
++  const filteredAssignments = assignments.filter((asgn) => {
+     const matchesTab = activeTab === "all" || asgn.status === activeTab;
+     const matchesSearch = asgn.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           asgn.className.toLowerCase().includes(searchQuery.toLowerCase());
+diff --git a/src/app/dashboard/tutor/page.tsx b/src/app/dashboard/tutor/page.tsx
+index dc7e440..bebb83e 100644
+--- a/src/app/dashboard/tutor/page.tsx
++++ b/src/app/dashboard/tutor/page.tsx
+@@ -25,6 +25,11 @@ import {
+   sampleChapters,
+ } from "@/data/mock/data";
+ import MathRenderer from "@/components/ui/math-renderer";
++import {
++  getLocalStorageAssignments,
++  getLocalStorageAttempts,
++} from "@/data/mock/store";
++import { useMemo, useState } from "react";
+ import Link from "next/link";
+ 
+ const container = {
+@@ -38,8 +43,25 @@ const item = {
+ };
+ 
+ export default function TutorDashboard() {
+-  const activeAssignments = mockAssignments.filter((a) => a.status === "active");
+-  const urgentSubmissions = recentSubmissions.filter((s) => s.status === "submitted");
++  const [assignments] = useState(() => getLocalStorageAssignments());
++  const [attempts] = useState(() => getLocalStorageAttempts());
++
++  const activeAssignments = assignments.filter((a) => a.status === "active");
++
++  const mappedSubmissions = useMemo(() => {
++    const list = attempts.map((att) => ({
++      id: att.id,
++      studentName: att.studentName,
++      assignmentTitle: att.assignmentTitle,
++      submittedAt: att.submittedAt || new Date().toISOString(),
++      score: att.score,
++      totalScore: att.totalQuestions,
++      status: att.status === "graded" ? ("graded" as const) : ("submitted" as const),
++    }));
++    return list.length > 0 ? list : recentSubmissions;
++  }, [attempts]);
++
++  const urgentSubmissions = mappedSubmissions.filter((s) => s.status === "submitted");
+   const aiReview = aiReviewSummaries[0];
+ 
+   return (
+@@ -51,22 +73,117 @@ export default function TutorDashboard() {
+           <h2 className="text-2xl font-bold sm:text-3xl">
+             Chào mừng trở lại, {currentTutor.name}! 👋
+           </h2>
+-          <p className="mt-2 text-white/80 text-sm max-w-xl">
+-            Hệ thống phân tích EStudy đã ghi nhận kết quả làm bài mới. 
+-            <strong> Xem học sinh sai gì — chuẩn bị nội dung dạy học buổi sau tối ưu nhất.</strong>
++          <p className="mt-2 text-white/85 text-xs sm:text-sm max-w-xl leading-relaxed">
++            🎯 <strong>EStudy giúp giáo viên nắm được học sinh đã làm sai những gì để chuẩn bị cho buổi học tiếp theo một cách hiệu quả nhất.</strong> Hệ thống tự động chấm điểm, khoanh vùng lỗ hổng kiến thức và đề xuất giáo án ôn tập buổi sau.
+           </p>
+           <div className="mt-5 flex flex-wrap gap-3">
+             <Link href="/dashboard/tutor/assignments/create">
+-              <Button size="sm" className="rounded-xl bg-white text-indigo-600 border-none hover:bg-white/90 font-medium">
++              <Button size="sm" className="rounded-xl bg-white text-indigo-600 border-none hover:bg-white/90 font-medium cursor-pointer">
+                 <Plus className="mr-1.5 h-4 w-4" /> Tạo bài tập mới
+               </Button>
+             </Link>
+             <Link href="/dashboard/tutor/wrong-questions">
+-              <Button size="sm" className="rounded-xl bg-white/20 text-white border-white/20 backdrop-blur hover:bg-white/30 font-medium">
++              <Button size="sm" className="rounded-xl bg-white/20 text-white border-white/20 backdrop-blur hover:bg-white/30 font-medium cursor-pointer">
+                 <AlertTriangle className="mr-1.5 h-4 w-4" /> Xem câu học sinh sai
+               </Button>
+             </Link>
++            <Link href="/dashboard/tutor/import/bulk-paste">
++              <Button size="sm" className="rounded-xl bg-white/20 text-white border-white/20 backdrop-blur hover:bg-white/30 font-medium cursor-pointer">
++                📝 Nhập nhanh câu hỏi (Paste)
++              </Button>
++            </Link>
++          </div>
++        </div>
++      </motion.div>
++
++      {/* Onboarding Core Workflow Stepper */}
++      <motion.div
++        variants={item}
++        className="rounded-2xl p-5 border border-indigo-100 bg-gradient-to-r from-indigo-50/20 via-slate-50/50 to-indigo-50/10 space-y-4 text-xs"
++      >
++        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
++          <div>
++            <h3 className="text-xs font-bold text-indigo-700 uppercase tracking-wider flex items-center gap-1.5">
++              <Sparkles className="h-3.5 w-3.5" /> Quy trình giảng dạy EStudy
++            </h3>
++            <p className="text-[10px] text-[var(--text-tertiary)] mt-0.5">
++              Hoàn thành chặng đường ôn luyện của lớp học chỉ với 3 bước đơn giản.
++            </p>
+           </div>
++          <Badge className="bg-indigo-100 text-indigo-800 border-indigo-200 self-start sm:self-center text-[9px] font-semibold px-2 py-0.5">
++            Toán Học 10
++          </Badge>
++        </div>
++
++        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
++          {/* Step 1 */}
++          <Link href="/dashboard/tutor/import/bulk-paste" className="block group">
++            <div
++              className="rounded-xl p-4 border border-[var(--border-default)] bg-white hover:border-indigo-300 hover:shadow-md transition-all duration-200 h-full flex flex-col justify-between cursor-pointer space-y-3"
++            >
++              <div className="space-y-1.5">
++                <div className="flex items-center justify-between">
++                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 font-bold text-[10px] border border-indigo-100">
++                    1
++                  </span>
++                  <Badge variant="secondary" className="text-[9px] bg-slate-100 text-slate-700">Nhập đề thô</Badge>
++                </div>
++                <h4 className="font-bold text-[var(--text-primary)] group-hover:text-indigo-600 transition-colors">Soạn câu hỏi nhanh</h4>
++                <p className="text-[10px] text-[var(--text-tertiary)] leading-relaxed">
++                  Copy-paste đề Toán từ Word/PDF vào khung nhập thô. Hệ thống tự động tách câu hỏi, đáp án & lời giải chi tiết.
++                </p>
++              </div>
++              <span className="text-[10px] text-indigo-650 font-semibold group-hover:translate-x-1 inline-flex items-center gap-1 mt-2 transition-transform">
++                Nhập câu hỏi ngay →
++              </span>
++            </div>
++          </Link>
++
++          {/* Step 2 */}
++          <Link href="/dashboard/tutor/question-bank" className="block group">
++            <div
++              className="rounded-xl p-4 border border-[var(--border-default)] bg-white hover:border-indigo-300 hover:shadow-md transition-all duration-200 h-full flex flex-col justify-between cursor-pointer space-y-3"
++            >
++              <div className="space-y-1.5">
++                <div className="flex items-center justify-between">
++                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 font-bold text-[10px] border border-indigo-100">
++                    2
++                  </span>
++                  <Badge variant="secondary" className="text-[9px] bg-slate-100 text-slate-700">Tạo đề thi</Badge>
++                </div>
++                <h4 className="font-bold text-[var(--text-primary)] group-hover:text-indigo-600 transition-colors">Tạo bài tập & Giao lớp</h4>
++                <p className="text-[10px] text-[var(--text-tertiary)] leading-relaxed">
++                  Chọn câu hỏi từ Ngân hàng đề, thiết lập thời gian làm bài, hạn chót và phát hành trực tuyến cho lớp Toán 10.
++                </p>
++              </div>
++              <span className="text-[10px] text-indigo-650 font-semibold group-hover:translate-x-1 inline-flex items-center gap-1 mt-2 transition-transform">
++                Vào Ngân hàng đề →
++              </span>
++            </div>
++          </Link>
++
++          {/* Step 3 */}
++          <Link href="/dashboard/tutor/wrong-questions" className="block group">
++            <div
++              className="rounded-xl p-4 border border-[var(--border-default)] bg-white hover:border-indigo-300 hover:shadow-md transition-all duration-200 h-full flex flex-col justify-between cursor-pointer space-y-3"
++            >
++              <div className="space-y-1.5">
++                <div className="flex items-center justify-between">
++                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 font-bold text-[10px] border border-indigo-100">
++                    3
++                  </span>
++                  <Badge variant="secondary" className="text-[9px] bg-amber-50 text-amber-700 border-amber-100">AI Review</Badge>
++                </div>
++                <h4 className="font-bold text-[var(--text-primary)] group-hover:text-indigo-600 transition-colors">Xem phân tích câu sai</h4>
++                <p className="text-[10px] text-[var(--text-tertiary)] leading-relaxed">
++                  Xem chi tiết các câu học sinh làm sai nhiều, các chủ đề học sinh yếu và nhận giáo án ôn tập đề xuất bởi AI.
++                </p>
++              </div>
++              <span className="text-[10px] text-indigo-650 font-semibold group-hover:translate-x-1 inline-flex items-center gap-1 mt-2 transition-transform">
++                Xem báo cáo câu sai →
++              </span>
++            </div>
++          </Link>
+         </div>
+       </motion.div>
+ 
+@@ -289,7 +406,7 @@ export default function TutorDashboard() {
+               Bài nộp gần đây
+             </h3>
+             <div className="space-y-3">
+-              {[...urgentSubmissions, ...recentSubmissions.filter((s) => s.status === "graded")].slice(0, 4).map((sub) => (
++              {[...urgentSubmissions, ...mappedSubmissions.filter((s) => s.status === "graded")].slice(0, 4).map((sub) => (
+                 <div key={sub.id} className="flex items-center gap-3">
+                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white gradient-bg">
+                     {getInitials(sub.studentName)}
+diff --git a/src/app/dashboard/tutor/question-bank/page.tsx b/src/app/dashboard/tutor/question-bank/page.tsx
+index 5753b13..e744189 100644
+--- a/src/app/dashboard/tutor/question-bank/page.tsx
++++ b/src/app/dashboard/tutor/question-bank/page.tsx
+@@ -28,6 +28,7 @@ import {
+ import MathRenderer from "@/components/ui/math-renderer";
+ import { getLocalStorageQuestions } from "@/data/mock/store";
+ import Link from "next/link";
++import { useRouter } from "next/navigation";
+ 
+ const container = {
+   hidden: { opacity: 0 },
+@@ -40,6 +41,7 @@ const item = {
+ };
+ 
+ export default function QuestionBankPage() {
++  const router = useRouter();
+   const [questions] = useState<Question[]>(() => getLocalStorageQuestions());
+   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+   const [expandedId, setExpandedId] = useState<string | null>(null);
+@@ -219,17 +221,16 @@ export default function QuestionBankPage() {
+         <div className="flex flex-wrap gap-2">
+           <Link href="/dashboard/tutor/import/bulk-paste">
+             <Button
+-              variant="outline"
+               size="sm"
+-              className="rounded-xl border-indigo-200 text-indigo-600 hover:bg-indigo-50/50 text-xs font-semibold"
++              className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold shadow-sm text-xs border-0"
+             >
+-              <ClipboardList className="mr-1.5 h-4 w-4" /> Nhập hàng loạt (Paste)
++              <Sparkles className="mr-1.5 h-4 w-4 text-amber-100 animate-pulse" /> Nhập nhanh câu hỏi (Paste)
+             </Button>
+           </Link>
+           <Button
+             onClick={() => setShowManualModal(true)}
+             size="sm"
+-            className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-medium shadow-sm text-xs"
++            className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-medium shadow-sm text-xs border-0"
+           >
+             <Plus className="mr-1.5 h-4 w-4" /> Thêm câu thủ công
+           </Button>
+@@ -556,6 +557,45 @@ export default function QuestionBankPage() {
+         )}
+       </motion.div>
+ 
++      {/* Floating Action Bar */}
++      <AnimatePresence>
++        {selectedIds.length > 0 && (
++          <motion.div
++            initial={{ y: 80, opacity: 0 }}
++            animate={{ y: 0, opacity: 1 }}
++            exit={{ y: 80, opacity: 0 }}
++            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 p-4 rounded-2xl shadow-xl flex items-center gap-4 bg-white/95 backdrop-blur border border-indigo-100 max-w-md w-[90%] sm:w-full justify-between text-xs"
++          >
++            <div className="flex items-center gap-2">
++              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-white font-bold text-[10px]">
++                {selectedIds.length}
++              </span>
++              <span className="font-semibold text-[var(--text-secondary)]">Câu hỏi đã chọn</span>
++            </div>
++            <div className="flex gap-2">
++              <Button
++                onClick={() => setSelectedIds([])}
++                variant="ghost"
++                size="sm"
++                className="text-[10px] text-red-500 hover:bg-red-50 rounded-xl px-2.5 py-1.5 h-7 cursor-pointer"
++              >
++                Bỏ chọn
++              </Button>
++              <Button
++                onClick={() => {
++                  localStorage.setItem("estudy_selected_question_ids", JSON.stringify(selectedIds));
++                  router.push("/dashboard/tutor/assignments/create");
++                }}
++                size="sm"
++                className="text-[10px] bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold px-3 py-1.5 h-7 cursor-pointer"
++              >
++                Tạo bài tập từ câu đã chọn
++              </Button>
++            </div>
++          </motion.div>
++        )}
++      </AnimatePresence>
++
+       {/* ============================================================
+           MODAL A: MANUAL QUESTION ENTRY MOCK DRAWERS
+           ============================================================ */}
+diff --git a/src/app/dashboard/tutor/results/page.tsx b/src/app/dashboard/tutor/results/page.tsx
+index 745c2f0..28a2920 100644
+--- a/src/app/dashboard/tutor/results/page.tsx
++++ b/src/app/dashboard/tutor/results/page.tsx
+@@ -1,6 +1,6 @@
+ "use client";
+ 
+-import { useState } from "react";
++import { useState, useMemo } from "react";
+ import { motion } from "framer-motion";
+ import {
+   CheckSquare,
+@@ -13,6 +13,7 @@ import {
+ import { Button } from "@/components/ui/button";
+ import { Badge } from "@/components/ui/badge";
+ import { recentSubmissions } from "@/data/mock/data";
++import { getLocalStorageAttempts } from "@/data/mock/store";
+ 
+ const container = {
+   hidden: { opacity: 0 },
+@@ -27,8 +28,22 @@ const item = {
+ export default function TutorResultsPage() {
+   const [searchQuery, setSearchQuery] = useState("");
+   const [statusFilter, setStatusFilter] = useState("All");
++  const [attempts] = useState(() => getLocalStorageAttempts());
+ 
+-  const filteredSubmissions = recentSubmissions.filter((sub) => {
++  const mappedSubmissions = useMemo(() => {
++    const list = attempts.map((att) => ({
++      id: att.id,
++      studentName: att.studentName,
++      assignmentTitle: att.assignmentTitle,
++      submittedAt: att.submittedAt || new Date().toISOString(),
++      score: att.score,
++      totalScore: att.totalQuestions,
++      status: att.status === "graded" ? ("graded" as const) : ("submitted" as const),
++    }));
++    return list.length > 0 ? list : recentSubmissions;
++  }, [attempts]);
++
++  const filteredSubmissions = mappedSubmissions.filter((sub) => {
+     const matchesSearch =
+       sub.studentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+       sub.assignmentTitle.toLowerCase().includes(searchQuery.toLowerCase());
+diff --git a/src/app/dashboard/tutor/wrong-questions/page.tsx b/src/app/dashboard/tutor/wrong-questions/page.tsx
+index 36576c9..df99fd4 100644
+--- a/src/app/dashboard/tutor/wrong-questions/page.tsx
++++ b/src/app/dashboard/tutor/wrong-questions/page.tsx
+@@ -1,6 +1,6 @@
+ "use client";
+ 
+-import { useState } from "react";
++import { useState, useMemo } from "react";
+ import { motion, AnimatePresence } from "framer-motion";
+ import {
+   AlertTriangle,
+@@ -16,13 +16,17 @@ import { Badge } from "@/components/ui/badge";
+ import { Progress } from "@/components/ui/progress";
+ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+ import {
+-  wrongQuestionItems,
+   tutorClasses,
++  wrongQuestionItems,
+   aiReviewSummaries,
+   sampleChapters,
+   sampleTopics,
+ } from "@/data/mock/data";
+ import MathRenderer from "@/components/ui/math-renderer";
++import {
++  getLocalStorageAttempts,
++  getLocalStorageQuestions
++} from "@/data/mock/store";
+ 
+ const container = {
+   hidden: { opacity: 0 },
+@@ -39,11 +43,83 @@ export default function WrongQuestionsPage() {
+   const [searchQuery, setSearchQuery] = useState("");
+   const [chapterFilter, setChapterFilter] = useState("All");
+ 
++  const [attempts] = useState(() => getLocalStorageAttempts());
++  const [questions] = useState(() => getLocalStorageQuestions());
++
++  const dynamicWrongQuestions = useMemo(() => {
++    const wqMap: Record<string, {
++      questionId: string;
++      wrongCount: number;
++      totalAttempts: number;
++      timeSpentTotal: number;
++      skippedCount: number;
++      studentsWrong: string[];
++    }> = {};
++
++    attempts.forEach((att) => {
++      if (att.status !== "graded") return;
++      att.answers.forEach((ans) => {
++        if (!wqMap[ans.questionId]) {
++          wqMap[ans.questionId] = {
++            questionId: ans.questionId,
++            wrongCount: 0,
++            totalAttempts: 0,
++            timeSpentTotal: 0,
++            skippedCount: 0,
++            studentsWrong: [],
++          };
++        }
++
++        const item = wqMap[ans.questionId];
++        item.totalAttempts += 1;
++        item.timeSpentTotal += ans.timeSpent || 0;
++
++        if (!ans.isCorrect) {
++          item.wrongCount += 1;
++          if (ans.selectedAnswer === null) {
++            item.skippedCount += 1;
++          }
++          if (att.studentName && !item.studentsWrong.includes(att.studentName)) {
++            item.studentsWrong.push(att.studentName);
++          }
++        }
++      });
++    });
++
++    const list = Object.values(wqMap)
++      .map((item) => {
++        const q = questions.find((question) => question.id === item.questionId);
++        return {
++          question: q!,
++          wrongCount: item.wrongCount,
++          totalAttempts: item.totalAttempts,
++          wrongRate: item.totalAttempts > 0 ? Math.round((item.wrongCount / item.totalAttempts) * 100) : 0,
++          avgTimeSpent: item.totalAttempts > 0 ? Math.round(item.timeSpentTotal / item.totalAttempts) : 0,
++          skippedCount: item.skippedCount,
++          studentsWrong: item.studentsWrong,
++        };
++      })
++      .filter((item) => item.question && item.wrongCount > 0)
++      .sort((a, b) => b.wrongRate - a.wrongRate);
++
++    // Fallback if no questions have been answered wrong yet (e.g. initial load)
++    if (list.length === 0) {
++      return wrongQuestionItems.map((wq) => {
++        const q = questions.find((question) => question.id === wq.question.id) || wq.question;
++        return {
++          ...wq,
++          question: q,
++        };
++      });
++    }
++    return list;
++  }, [attempts, questions]);
++
+   const aiReview = aiReviewSummaries[0];
+   const classStudents = tutorClasses[0]?.students || [];
+ 
+   // Filtered wrong question items
+-  const filteredWrongQuestions = wrongQuestionItems.filter((wq) => {
++  const filteredWrongQuestions = dynamicWrongQuestions.filter((wq) => {
+     const matchesSearch =
+       wq.question.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+       wq.question.explanation.toLowerCase().includes(searchQuery.toLowerCase());
+@@ -87,7 +163,7 @@ export default function WrongQuestionsPage() {
+             <AlertTriangle className="h-5 w-5 text-red-500 bg-red-50 p-1 rounded-lg" />
+           </div>
+           <p className="text-3xl font-bold mt-2" style={{ color: "var(--text-primary)" }}>
+-            {wrongQuestionItems.reduce((acc, curr) => acc + curr.wrongCount, 0)}
++            {dynamicWrongQuestions.reduce((acc, curr) => acc + curr.wrongCount, 0)}
+           </p>
+           <p className="text-[10px] mt-1.5" style={{ color: "var(--text-tertiary)" }}>
+             Dữ liệu tích lũy từ các bài kiểm tra đã chấm
+@@ -105,10 +181,10 @@ export default function WrongQuestionsPage() {
+             <AlertTriangle className="h-5 w-5 text-orange-500 bg-orange-50 p-1 rounded-lg" />
+           </div>
+           <p className="text-3xl font-bold mt-2" style={{ color: "var(--text-primary)" }}>
+-            {wrongQuestionItems.length > 0 ? Math.max(...wrongQuestionItems.map((q) => q.wrongRate)) : 0}%
++            {dynamicWrongQuestions.length > 0 ? Math.max(...dynamicWrongQuestions.map((q) => q.wrongRate)) : 0}%
+           </p>
+           <p className="text-[10px] mt-1.5 truncate" style={{ color: "var(--text-tertiary)" }}>
+-            Chủ đề: {sampleTopics.find(t => t.id === wrongQuestionItems[0]?.question.topicId)?.name || "N/A"}
++            Chủ đề: {sampleTopics.find(t => t.id === dynamicWrongQuestions[0]?.question.topicId)?.name || "N/A"}
+           </p>
+         </div>
+ 
+@@ -349,9 +425,9 @@ export default function WrongQuestionsPage() {
+                 <h3 className="font-semibold" style={{ color: "var(--text-secondary)" }}>Đề xuất giảng dạy Toán 10</h3>
+               </div>
+             </div>
+-            <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+-              {aiReview.summary}
+-            </p>
++            <div className="text-xs leading-relaxed text-left" style={{ color: "var(--text-secondary)" }}>
++              <MathRenderer text={aiReview.summary} />
++            </div>
+           </motion.div>
+ 
+           <motion.div
+@@ -364,11 +440,13 @@ export default function WrongQuestionsPage() {
+             </h3>
+             <div className="space-y-3">
+               {aiReview.nextLessonSuggestions.map((sug, idx) => (
+-                <div key={idx} className="flex items-start gap-3 p-3 rounded-xl bg-[var(--surface-subtle)] text-xs">
++                <div key={idx} className="flex items-start gap-3 p-3 rounded-xl bg-[var(--surface-subtle)] text-xs text-left">
+                   <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-indigo-50 text-indigo-600 font-bold mt-0.5">
+                     {idx + 1}
+                   </div>
+-                  <p style={{ color: "var(--text-secondary)" }}>{sug}</p>
++                  <div className="flex-1" style={{ color: "var(--text-secondary)" }}>
++                    <MathRenderer text={sug} />
++                  </div>
+                 </div>
+               ))}
+             </div>
+diff --git a/src/data/mock/store.ts b/src/data/mock/store.ts
+index f022956..5a85b68 100644
+--- a/src/data/mock/store.ts
++++ b/src/data/mock/store.ts
+@@ -2,13 +2,21 @@
+ // EStudy Frontend State Persistence Store (Local Storage Mock)
+ // ============================================================
+ 
+-import { questionBank, Question } from "./data";
++import {
++  questionBank,
++  Question,
++  mockAssignments,
++  studentAttempts,
++  AssignmentSummary,
++  StudentAttempt
++} from "./data";
+ 
+ const STORAGE_KEY = "estudy_question_bank";
++const ASSIGNMENTS_KEY = "estudy_assignments";
++const ATTEMPTS_KEY = "estudy_attempts";
+ 
+ /**
+- * Retrieves the current list of questions.
+- * Fallbacks to the mock data from data.ts if local storage is empty.
++ * Questions State
+  */
+ export function getLocalStorageQuestions(): Question[] {
+   if (typeof window === "undefined") {
+@@ -17,37 +25,105 @@ export function getLocalStorageQuestions(): Question[] {
+   try {
+     const data = localStorage.getItem(STORAGE_KEY);
+     if (!data) {
+-      // Initialize with default mock questions
+       localStorage.setItem(STORAGE_KEY, JSON.stringify(questionBank));
+       return questionBank;
+     }
+     return JSON.parse(data);
+   } catch (error) {
+-    console.error("Failed to read from localStorage:", error);
++    console.error("Failed to read questions from localStorage:", error);
+     return questionBank;
+   }
+ }
+ 
+-/**
+- * Saves the current list of questions to localStorage.
+- */
+ export function saveLocalStorageQuestions(questions: Question[]): void {
+   if (typeof window === "undefined") return;
+   try {
+     localStorage.setItem(STORAGE_KEY, JSON.stringify(questions));
+   } catch (error) {
+-    console.error("Failed to write to localStorage:", error);
++    console.error("Failed to write questions to localStorage:", error);
+   }
+ }
+ 
+-/**
+- * Appends a list of new questions to the bank.
+- */
+ export function addQuestionsToBank(newQuestions: Question[]): void {
+   const current = getLocalStorageQuestions();
+-  // Filter out duplicates by ID
+   const currentIds = new Set(current.map((q) => q.id));
+   const uniqueNew = newQuestions.filter((q) => !currentIds.has(q.id));
+   const updated = [...uniqueNew, ...current];
+   saveLocalStorageQuestions(updated);
+ }
++
++/**
++ * Assignments State
++ */
++export function getLocalStorageAssignments(): AssignmentSummary[] {
++  if (typeof window === "undefined") {
++    return mockAssignments;
++  }
++  try {
++    const data = localStorage.getItem(ASSIGNMENTS_KEY);
++    if (!data) {
++      localStorage.setItem(ASSIGNMENTS_KEY, JSON.stringify(mockAssignments));
++      return mockAssignments;
++    }
++    return JSON.parse(data);
++  } catch (error) {
++    console.error("Failed to read assignments from localStorage:", error);
++    return mockAssignments;
++  }
++}
++
++export function saveLocalStorageAssignments(assignments: AssignmentSummary[]): void {
++  if (typeof window === "undefined") return;
++  try {
++    localStorage.setItem(ASSIGNMENTS_KEY, JSON.stringify(assignments));
++  } catch (error) {
++    console.error("Failed to write assignments to localStorage:", error);
++  }
++}
++
++export function addAssignment(newAsgn: AssignmentSummary): void {
++  const current = getLocalStorageAssignments();
++  const updated = [newAsgn, ...current];
++  saveLocalStorageAssignments(updated);
++}
++
++/**
++ * Student Attempts State
++ */
++export function getLocalStorageAttempts(): StudentAttempt[] {
++  if (typeof window === "undefined") {
++    return studentAttempts;
++  }
++  try {
++    const data = localStorage.getItem(ATTEMPTS_KEY);
++    if (!data) {
++      localStorage.setItem(ATTEMPTS_KEY, JSON.stringify(studentAttempts));
++      return studentAttempts;
++    }
++    return JSON.parse(data);
++  } catch (error) {
++    console.error("Failed to read attempts from localStorage:", error);
++    return studentAttempts;
++  }
++}
++
++export function saveLocalStorageAttempts(attempts: StudentAttempt[]): void {
++  if (typeof window === "undefined") return;
++  try {
++    localStorage.setItem(ATTEMPTS_KEY, JSON.stringify(attempts));
++  } catch (error) {
++    console.error("Failed to write attempts to localStorage:", error);
++  }
++}
++
++export function addOrUpdateAttempt(attempt: StudentAttempt): void {
++  const current = getLocalStorageAttempts();
++  const index = current.findIndex((att) => att.id === attempt.id);
++  let updated = [...current];
++  if (index !== -1) {
++    updated[index] = attempt;
++  } else {
++    updated = [attempt, ...updated];
++  }
++  saveLocalStorageAttempts(updated);
++}

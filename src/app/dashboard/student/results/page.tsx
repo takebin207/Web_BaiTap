@@ -10,8 +10,10 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { studentAttempts } from "@/data/mock/data";
+import { getLocalStorageAttempts } from "@/data/mock/store";
+import { StudentAttempt } from "@/data/mock/data";
 import Link from "next/link";
+import { useState } from "react";
 
 const container = {
   hidden: { opacity: 0 },
@@ -24,7 +26,8 @@ const item = {
 };
 
 export default function StudentResultsHistoryPage() {
-  const gradedAttempts = studentAttempts.filter((att) => att.status === "graded");
+  const [attempts] = useState<StudentAttempt[]>(() => getLocalStorageAttempts());
+  const gradedAttempts = attempts.filter((att) => att.status === "graded");
 
   return (
     <motion.div variants={container} initial="hidden" animate="visible" className="space-y-6">

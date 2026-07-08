@@ -22,19 +22,18 @@ EStudy tập trung tối ưu hóa **luồng nghiệp vụ ôn tập câu sai** c
 
 ---
 
-### 1. Tính năng cốt lõi gần hạn (Near-term Focus):
-* **Ngân hàng câu hỏi Toán 10:** Quản lý câu hỏi trắc nghiệm/đáp án ngắn theo chương trình GDPT 2018 (Mệnh đề, Tập hợp, Hàm số bậc hai, Vectơ, Hệ thức lượng, Thống kê, Xác suất).
-* **Nhập nhanh hàng loạt (Bulk Paste):** Trình bóc tách regex phía máy khách (Client-side parser) giúp chuyển đổi văn bản câu hỏi thô thành các thẻ câu hỏi chuẩn hóa có ký hiệu LaTeX. Tích hợp ma trận phân loại (Chương, Chủ đề, Độ khó, Mức độ nhận thức).
-* **Quy trình duyệt trước khi lưu (Review-First Workflow):** Câu hỏi nạp vào được đánh dấu trạng thái `NEEDS_REVIEW` (Cần rà soát) nếu thiếu đáp án/lời giải/lựa chọn. Giáo viên rà soát, chỉnh sửa trực tiếp trên thẻ câu hỏi, duyệt thông qua hoặc bỏ qua trước khi lưu.
-* **Đồng bộ hóa Local Storage:** Dữ liệu sau khi giáo viên duyệt được ghi đè và lưu trữ trong `localStorage` để đồng bộ hóa lập tức qua trang Ngân hàng câu hỏi, Giao bài tập mà không cần gọi API máy chủ.
-* **Trình thiết lập đề thi:** Hỗ trợ tạo đề theo cấu trúc phân bố ma trận (độ khó và chương học) tự động.
-* **Học sinh làm bài & Xem kết quả:** Làm bài trắc nghiệm/điền từ ngắn có bộ đếm thời gian, xem đáp án chi tiết và giải thích AI.
-* **Phân tích lỗi sai:** Bảng tổng hợp câu sai, câu bỏ qua, câu làm chậm theo từng chủ đề Toán 10.
+### 1. Tính năng cốt lõi đã triển khai (Implemented Features):
+* **Ngân hàng câu hỏi Toán 10 [DATABASE-BACKED]:** Quản lý câu hỏi trắc nghiệm/đáp án ngắn theo chương trình GDPT 2018. Tất cả thao tác xem, tạo mới, chỉnh sửa, và xóa đều được lưu vào cơ sở dữ liệu.
+* **Nhập nhanh hàng loạt (Bulk Paste):** Trình bóc tách regex chuyển đổi văn bản thô thành câu hỏi có công thức LaTeX và đồng bộ trực tiếp vào cơ sở dữ liệu.
+* **Trình thiết lập đề thi (Assignment Builder v1) [DATABASE-BACKED]:** Giao diện thiết lập bài tập mới từ các câu hỏi trong ngân hàng câu hỏi.
+* **Đăng nhập & Phân quyền (Authentication) [DATABASE-BACKED]:** Tích hợp Auth.js (NextAuth v5) phân quyền Giáo viên - Học sinh với JWT Session.
+* **Làm bài & Chấm điểm tích hợp DB (Student Attempt v1) [DATABASE-BACKED]:** Quy trình làm bài trực tuyến đầy đủ, tự động tạo lượt làm bài `IN_PROGRESS`, theo dõi bộ đếm thời gian, chấm điểm trắc nghiệm khách quan tự động (không dùng AI) và cập nhật trạng thái kết quả bài làm vào database.
+* **Hồ sơ câu sai (Wrong Question Review v1):** Ghi nhận các câu học sinh làm sai hoặc bỏ qua vào cơ sở dữ liệu để phục vụ rà soát lỗi.
+* **Chế độ Giao diện Sáng/Tối (Dark Mode Foundation):** Tích hợp thư viện `next-themes` và `ThemeProvider` toàn cục, thêm nút chuyển đổi giao diện (Theme Toggle) ở Header cho phép chuyển đổi chế độ Sáng (Light), Tối (Dark), và Hệ thống (System) với hệ màu CSS Variables đồng bộ.
 
 ### 2. Tính năng dài hạn tương lai (Future Features):
-* Tải tệp đề bài & đáp án (PDF, Word, Ảnh) riêng biệt và tự động khớp cặp bằng AI OCR (sẽ triển khai sau để tối ưu hóa chi phí gọi Cloud OCR khi bắt đầu MVP).
-* Nhận dạng công thức toán học/hóa học nâng cao.
-* Xuất đề bài và đáp án ra file Word (.docx) và PDF chất lượng cao.
+* **Google Gemini API OCR & Explain:** Tự động OCR tệp đề, giải thích lỗi sai và tự sinh câu tương đương sử dụng AI.
+* **Xuất đề Word/PDF:** Xuất đề thi và đáp án chất lượng cao.
 
 ---
 
@@ -54,3 +53,40 @@ EStudy tập trung tối ưu hóa **luồng nghiệp vụ ôn tập câu sai** c
    * Trang chủ: [http://localhost:3000](http://localhost:3000)
    * Trang giáo viên: [http://localhost:3000/dashboard/tutor](http://localhost:3000/dashboard/tutor)
    * Trang học sinh: [http://localhost:3000/dashboard/student](http://localhost:3000/dashboard/student)
+
+---
+
+## 🗄️ Cấu hình Cơ sở dữ liệu (Prisma & PostgreSQL)
+
+Dự án sử dụng Prisma ORM để quản lý và kết nối tới cơ sở dữ liệu PostgreSQL.
+
+### Các bước cài đặt:
+
+1. **Thiết lập biến môi trường**:
+   Sao chép file `.env.example` thành `.env` ở thư mục gốc:
+   ```bash
+   cp .env.example .env
+   ```
+   Cập nhật `DATABASE_URL` trong file `.env` với đường dẫn kết nối PostgreSQL của bạn.
+
+2. **Khởi tạo và đẩy Schema lên Database**:
+   ```bash
+   npm run db:migrate --name init_database_foundation
+   ```
+
+3. **Sinh Prisma Client**:
+   ```bash
+   npm run db:generate
+   ```
+
+4. **Nạp dữ liệu mẫu (Toán lớp 10 chương trình GDPT 2018)**:
+   ```bash
+   npm run db:seed
+   ```
+
+5. **Xem và quản lý cơ sở dữ liệu trực quan**:
+   ```bash
+   npm run db:studio
+   ```
+
+Chi tiết lược đồ dữ liệu và các trường xem tại [docs/database.md](file:///d:/Web_BaiTap/ai-learning-platform/docs/database.md).

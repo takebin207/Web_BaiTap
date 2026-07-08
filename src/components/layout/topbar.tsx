@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import {
@@ -8,10 +8,14 @@ import {
   Search,
   Menu,
   X,
+  Sun,
+  Moon,
+  Monitor,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { mockNotifications } from "@/data/mock/data";
 import { Badge } from "@/components/ui/badge";
+import { useTheme } from "next-themes";
 
 // ============================================================
 // Page title mapping
@@ -51,6 +55,19 @@ export function Topbar({ onMenuClick, isMobileMenuOpen }: TopbarProps) {
   const pathname = usePathname();
   const [showNotifications, setShowNotifications] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
+  
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const toggleTheme = () => {
+    if (theme === "light") setTheme("dark");
+    else if (theme === "dark") setTheme("system");
+    else setTheme("light");
+  };
   const unreadCount = mockNotifications.filter((n) => !n.read).length;
   const getTitle = () => {
     if (pathname.startsWith("/dashboard/student/practice/")) {
@@ -122,6 +139,26 @@ export function Topbar({ onMenuClick, isMobileMenuOpen }: TopbarProps) {
             ⌘K
           </kbd>
         </div>
+
+        {/* Theme Toggle */}
+        <button
+          onClick={toggleTheme}
+          className="flex h-9 w-9 items-center justify-center rounded-xl transition-colors cursor-pointer"
+          style={{ color: "var(--text-secondary)" }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = "var(--surface-subtle)")}
+          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+          title="Thay đổi giao diện (Sáng/Tối/Hệ thống)"
+        >
+          {!mounted ? (
+            <Sun className="h-[18px] w-[18px]" />
+          ) : theme === "dark" ? (
+            <Moon className="h-[18px] w-[18px]" />
+          ) : theme === "system" ? (
+            <Monitor className="h-[18px] w-[18px]" />
+          ) : (
+            <Sun className="h-[18px] w-[18px]" />
+          )}
+        </button>
 
         {/* Notifications */}
         <div className="relative">

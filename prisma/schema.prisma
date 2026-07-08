@@ -1,0 +1,211 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  TUTOR
+  STUDENT
+  ADMIN
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  SHORT_ANSWER
+  ESSAY
+  IMAGE_BASED
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum CognitiveLevel {
+  RECOGNITION
+  UNDERSTANDING
+  APPLICATION
+  ADVANCED_APPLICATION
+}
+
+enum QuestionStatus {
+  DRAFT
+  NEEDS_REVIEW
+  READY
+  REVIEW_REQUIRED
+  ERROR
+}
+
+enum AssignmentStatus {
+  DRAFT
+  ASSIGNED
+  CLOSED
+}
+
+enum AttemptStatus {
+  IN_PROGRESS
+  SUBMITTED
+  GRADED
+}
+
+enum ReviewReason {
+  WRONG
+  SKIPPED
+  LONG_TIME
+  COMMON_MISTAKE
+}
+
+model User {
+  id                   String                @id @default(uuid())
+  name                 String
+  email                String                @unique
+  role                 Role                  @default(STUDENT)
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  classrooms           Classroom[]           @relation("TutorClassrooms")
+  enrollments          ClassEnrollment[]
+  createdQuestions     Question[]            @relation("CreatedQuestions")
+  createdAssignments   Assignment[]          @relation("CreatedAssignments")
+  attempts             Attempt[]
+  wrongQuestionReviews WrongQuestionReview[]
+
+  @@map("users")
+}
+
+model Classroom {
+  id          String            @id @default(uuid())
+  name        String
+  subject     String            @default("Toán học")
+  grade       String
+  tutorId     String
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  tutor       User              @relation("TutorClassrooms", fields: [tutorId], references: [id], onDelete: Cascade)
+  enrollments ClassEnrollment[]
+  assignments Assignment[]
+
+  @@map("classrooms")
+}
+
+model ClassEnrollment {
+  classroomId String
+  studentId   String
+  enrolledAt  DateTime          @default(now())
+  classroom   Classroom         @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  student     User              @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@id([classroomId, studentId])
+  @@map("class_enrollments")
+}
+
+model Question {
+  id             String               @id @default(uuid())
+  content        String               @db.Text
+  questionType   QuestionType
+  options        Json?
+  correctAnswer  String               @db.Text
+  explanation    String?              @db.Text
+  subject        String               @default("Toán học")
+  grade          String
+  chapter        String
+  topic          String
+  difficulty     Difficulty           @default(MEDIUM)
+  cognitiveLevel CognitiveLevel       @default(UNDERSTANDING)
+  source         String?
+  status         QuestionStatus       @default(DRAFT)
+  createdById    String
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  creator        User                 @relation("CreatedQuestions", fields: [createdById], references: [id])
+  assignments    AssignmentQuestion[]
+  attemptAnswers AttemptAnswer[]
+  reviews        WrongQuestionReview[]
+
+  @@map("questions")
+}
+
+model Assignment {
+  id                       String               @id @default(uuid())
+  title                    String
+  description              String?              @db.Text
+  classId                  String
+  createdById              String
+  subject                  String               @default("Toán học")
+  grade                    String
+  timeLimitMinutes         Int?
+  deadline                 DateTime?
+  showSolutionsAfterSubmit Boolean              @default(true)
+  status                   AssignmentStatus     @default(DRAFT)
+  createdAt                DateTime             @default(now())
+  updatedAt                DateTime             @updatedAt
+  classroom                Classroom            @relation(fields: [classId], references: [id], onDelete: Cascade)
+  creator                  User                 @relation("CreatedAssignments", fields: [createdById], references: [id])
+  questions                AssignmentQuestion[]
+  attempts                 Attempt[]
+  wrongQuestionReviews     WrongQuestionReview[]
+
+  @@map("assignments")
+}
+
+model AssignmentQuestion {
+  assignmentId String
+  questionId   String
+  order        Int
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  question     Question   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@id([assignmentId, questionId])
+  @@map("assignment_questions")
+}
+
+model Attempt {
+  id               String          @id @default(uuid())
+  assignmentId     String
+  studentId        String
+  startedAt        DateTime        @default(now())
+  submittedAt      DateTime?
+  timeSpentSeconds Int?
+  score            Float?
+  status           AttemptStatus   @default(IN_PROGRESS)
+  assignment       Assignment      @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  student          User            @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  answers          AttemptAnswer[]
+
+  @@map("attempts")
+}
+
+model AttemptAnswer {
+  id               String   @id @default(uuid())
+  attemptId        String
+  questionId       String
+  answer           String   @db.Text
+  isCorrect        Boolean?
+  timeSpentSeconds Int?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  attempt          Attempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question         Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@map("attempt_answers")
+}
+
+model WrongQuestionReview {
+  id           String       @id @default(uuid())
+  assignmentId String
+  questionId   String
+  studentId    String
+  topic        String
+  reason       ReviewReason
+  priority     Int          @default(1)
+  createdAt    DateTime     @default(now())
+  assignment   Assignment   @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  question     Question     @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  student      User         @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@map("wrong_question_reviews")
+}

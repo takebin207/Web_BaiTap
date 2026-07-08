@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   AlertTriangle,
@@ -16,13 +16,17 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  wrongQuestionItems,
   tutorClasses,
+  wrongQuestionItems,
   aiReviewSummaries,
   sampleChapters,
   sampleTopics,
 } from "@/data/mock/data";
 import MathRenderer from "@/components/ui/math-renderer";
+import {
+  getLocalStorageAttempts,
+  getLocalStorageQuestions
+} from "@/data/mock/store";
 
 const container = {
   hidden: { opacity: 0 },
@@ -39,11 +43,83 @@ export default function WrongQuestionsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [chapterFilter, setChapterFilter] = useState("All");
 
+  const [attempts] = useState(() => getLocalStorageAttempts());
+  const [questions] = useState(() => getLocalStorageQuestions());
+
+  const dynamicWrongQuestions = useMemo(() => {
+    const wqMap: Record<string, {
+      questionId: string;
+      wrongCount: number;
+      totalAttempts: number;
+      timeSpentTotal: number;
+      skippedCount: number;
+      studentsWrong: string[];
+    }> = {};
+
+    attempts.forEach((att) => {
+      if (att.status !== "graded") return;
+      att.answers.forEach((ans) => {
+        if (!wqMap[ans.questionId]) {
+          wqMap[ans.questionId] = {
+            questionId: ans.questionId,
+            wrongCount: 0,
+            totalAttempts: 0,
+            timeSpentTotal: 0,
+            skippedCount: 0,
+            studentsWrong: [],
+          };
+        }
+
+        const item = wqMap[ans.questionId];
+        item.totalAttempts += 1;
+        item.timeSpentTotal += ans.timeSpent || 0;
+
+        if (!ans.isCorrect) {
+          item.wrongCount += 1;
+          if (ans.selectedAnswer === null) {
+            item.skippedCount += 1;
+          }
+          if (att.studentName && !item.studentsWrong.includes(att.studentName)) {
+            item.studentsWrong.push(att.studentName);
+          }
+        }
+      });
+    });
+
+    const list = Object.values(wqMap)
+      .map((item) => {
+        const q = questions.find((question) => question.id === item.questionId);
+        return {
+          question: q!,
+          wrongCount: item.wrongCount,
+          totalAttempts: item.totalAttempts,
+          wrongRate: item.totalAttempts > 0 ? Math.round((item.wrongCount / item.totalAttempts) * 100) : 0,
+          avgTimeSpent: item.totalAttempts > 0 ? Math.round(item.timeSpentTotal / item.totalAttempts) : 0,
+          skippedCount: item.skippedCount,
+          studentsWrong: item.studentsWrong,
+        };
+      })
+      .filter((item) => item.question && item.wrongCount > 0)
+      .sort((a, b) => b.wrongRate - a.wrongRate);
+
+    // Fallback if no questions have been answered wrong yet (e.g. initial load)
+    if (list.length === 0) {
+      return wrongQuestionItems.map((wq) => {
+        const q = questions.find((question) => question.id === wq.question.id) || wq.question;
+        return {
+          ...wq,
+          question: q,
+        };
+      });
+    }
+    return list;
+  }, [attempts, questions]);
+
   const aiReview = aiReviewSummaries[0];
   const classStudents = tutorClasses[0]?.students || [];
 
   // Filtered wrong question items
-  const filteredWrongQuestions = wrongQuestionItems.filter((wq) => {
+  const filteredWrongQuestions = dynamicWrongQuestions.filter((wq) => {
     const matchesSearch =
       wq.question.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
       wq.question.explanation.toLowerCase().includes(searchQuery.toLowerCase());
@@ -87,7 +163,7 @@ export default function WrongQuestionsPage() {
             <AlertTriangle className="h-5 w-5 text-red-500 bg-red-50 p-1 rounded-lg" />
           </div>
           <p className="text-3xl font-bold mt-2" style={{ color: "var(--text-primary)" }}>
-            {wrongQuestionItems.reduce((acc, curr) => acc + curr.wrongCount, 0)}
+            {dynamicWrongQuestions.reduce((acc, curr) => acc + curr.wrongCount, 0)}
           </p>
           <p className="text-[10px] mt-1.5" style={{ color: "var(--text-tertiary)" }}>
             Dữ liệu tích lũy từ các bài kiểm tra đã chấm
@@ -105,10 +181,10 @@ export default function WrongQuestionsPage() {
             <AlertTriangle className="h-5 w-5 text-orange-500 bg-orange-50 p-1 rounded-lg" />
           </div>
           <p className="text-3xl font-bold mt-2" style={{ color: "var(--text-primary)" }}>
-            {wrongQuestionItems.length > 0 ? Math.max(...wrongQuestionItems.map((q) => q.wrongRate)) : 0}%
+            {dynamicWrongQuestions.length > 0 ? Math.max(...dynamicWrongQuestions.map((q) => q.wrongRate)) : 0}%
           </p>
           <p className="text-[10px] mt-1.5 truncate" style={{ color: "var(--text-tertiary)" }}>
-            Chủ đề: {sampleTopics.find(t => t.id === wrongQuestionItems[0]?.question.topicId)?.name || "N/A"}
+            Chủ đề: {sampleTopics.find(t => t.id === dynamicWrongQuestions[0]?.question.topicId)?.name || "N/A"}
           </p>
         </div>
 
@@ -349,9 +425,9 @@ export default function WrongQuestionsPage() {
                 <h3 className="font-semibold" style={{ color: "var(--text-secondary)" }}>Đề xuất giảng dạy Toán 10</h3>
               </div>
             </div>
-            <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-              {aiReview.summary}
-            </p>
+            <div className="text-xs leading-relaxed text-left" style={{ color: "var(--text-secondary)" }}>
+              <MathRenderer text={aiReview.summary} />
+            </div>
           </motion.div>
 
           <motion.div
@@ -364,11 +440,13 @@ export default function WrongQuestionsPage() {
             </h3>
             <div className="space-y-3">
               {aiReview.nextLessonSuggestions.map((sug, idx) => (
-                <div key={idx} className="flex items-start gap-3 p-3 rounded-xl bg-[var(--surface-subtle)] text-xs">
+                <div key={idx} className="flex items-start gap-3 p-3 rounded-xl bg-[var(--surface-subtle)] text-xs text-left">
                   <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-indigo-50 text-indigo-600 font-bold mt-0.5">
                     {idx + 1}
                   </div>
-                  <p style={{ color: "var(--text-secondary)" }}>{sug}</p>
+                  <div className="flex-1" style={{ color: "var(--text-secondary)" }}>
+                    <MathRenderer text={sug} />
+                  </div>
                 </div>
               ))}
             </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -8,26 +8,20 @@ import {
   Plus,
   ChevronDown,
   ChevronUp,
-  Database,
-  Calendar,
-  AlertTriangle,
   FolderOpen,
-  ClipboardList,
   Sparkles,
   X,
-  CheckCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  questionBank,
   sampleChapters,
   sampleTopics,
   Question,
 } from "@/data/mock/data";
 import MathRenderer from "@/components/ui/math-renderer";
-import { getLocalStorageQuestions } from "@/data/mock/store";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const container = {
   hidden: { opacity: 0 },
@@ -39,15 +33,38 @@ const item = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
 };
 
+function mapDbQuestionToFrontend(dbQ: any): Question {
+  return {
+    id: dbQ.id,
+    content: dbQ.content,
+    options: dbQ.options ? (dbQ.options as any) : undefined,
+    correctAnswer: dbQ.correctAnswer,
+    explanation: dbQ.explanation || "",
+    curriculumId: "cur-2018-math-10",
+    subjectId: dbQ.subject || "math",
+    gradeId: dbQ.grade || "grade-10",
+    chapterId: dbQ.chapter || "chap-1",
+    topicId: dbQ.topic || "top-1-1",
+    questionType: dbQ.questionType.toLowerCase() as any,
+    difficulty: dbQ.difficulty.toLowerCase() as any,
+    cognitiveLevel: dbQ.cognitiveLevel.toLowerCase() as any,
+    source: dbQ.source || "",
+    status: dbQ.status,
+    createdAt: dbQ.createdAt,
+  };
+}
+
 export default function QuestionBankPage() {
-  const [questions] = useState<Question[]>(() => getLocalStorageQuestions());
+  const router = useRouter();
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   // Search & Filters state
   const [searchQuery, setSearchQuery] = useState("");
-  const [subjectFilter, setSubjectFilter] = useState("All");
-  const [gradeFilter, setGradeFilter] = useState("All");
+  const [subjectFilter] = useState("All"); // Kept local since grade 10 math is primary focus
+  const [gradeFilter] = useState("All");
   const [chapterFilter, setChapterFilter] = useState("All");
   const [topicFilter, setTopicFilter] = useState("All");
   const [difficultyFilter, setDifficultyFilter] = useState("All");
@@ -58,6 +75,7 @@ export default function QuestionBankPage() {
   // Modals state
   const [showManualModal, setShowManualModal] = useState(false);
   const [showBulkModal, setShowBulkModal] = useState(false);
+  const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
 
   // Manual form state
   const [manualForm, setManualForm] = useState({
@@ -79,6 +97,28 @@ export default function QuestionBankPage() {
   // Bulk paste state
   const [bulkText, setBulkText] = useState("");
   const [bulkPreview, setBulkPreview] = useState<Array<{ content: string; key: string }> | null>(null);
+
+  const fetchQuestions = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/tutor/questions");
+      if (res.ok) {
+        const data = await res.json();
+        const mapped = data.map(mapDbQuestionToFrontend);
+        setQuestions(mapped);
+      } else {
+        console.error("Không thể lấy dữ liệu câu hỏi từ API");
+      }
+    } catch (e) {
+      console.error("Lỗi khi kết nối API câu hỏi:", e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchQuestions();
+  }, []);
 
   // Filter local logic
   const filteredQuestions = questions.filter((q) => {
@@ -124,19 +164,125 @@ export default function QuestionBankPage() {
     }
   };
 
-  const handleManualSave = (e: React.FormEvent) => {
+  const handleManualSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!manualForm.content) {
       alert("Vui lòng nhập nội dung câu hỏi!");
       return;
     }
-    alert(
-      `[MOCK SAVE] Đã mô phỏng lưu câu hỏi mới vào Ngân hàng câu hỏi dưới trạng thái 'DRAFT':\n"${manualForm.content.slice(
-        0,
-        50
-      )}..."`
-    );
-    setShowManualModal(false);
+
+    const options = manualForm.questionType === "multiple_choice" ? [
+      { id: "a", label: "A", content: manualForm.optA || "" },
+      { id: "b", label: "B", content: manualForm.optB || "" },
+      { id: "c", label: "C", content: manualForm.optC || "" },
+      { id: "d", label: "D", content: manualForm.optD || "" },
+    ] : null;
+
+    const payload = {
+      content: manualForm.content,
+      questionType: manualForm.questionType.toUpperCase(),
+      options: options,
+      correctAnswer: manualForm.correctAnswer,
+      explanation: manualForm.explanation,
+      subject: "math",
+      grade: "grade-10",
+      chapter: manualForm.chapterId,
+      topic: manualForm.topicId,
+      difficulty: manualForm.difficulty.toUpperCase(),
+      cognitiveLevel: manualForm.cognitiveLevel.toUpperCase(),
+      source: manualForm.source || null,
+      status: editingQuestionId ? undefined : "DRAFT",
+    };
+
+    try {
+      let res;
+      if (editingQuestionId) {
+        res = await fetch(`/api/tutor/questions/${editingQuestionId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        res = await fetch("/api/tutor/questions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
+
+      if (res.ok) {
+        alert(editingQuestionId ? "Đã lưu chỉnh sửa câu hỏi!" : "Đã tạo câu hỏi nháp mới!");
+        setShowManualModal(false);
+        setEditingQuestionId(null);
+        setManualForm({
+          content: "",
+          optA: "",
+          optB: "",
+          optC: "",
+          optD: "",
+          correctAnswer: "a",
+          explanation: "",
+          chapterId: "chap-1",
+          topicId: "top-1-1",
+          difficulty: "medium",
+          cognitiveLevel: "understanding",
+          questionType: "multiple_choice",
+          source: "",
+        });
+        fetchQuestions();
+      } else {
+        const err = await res.json();
+        alert("Lỗi khi lưu câu hỏi: " + err.error);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Lỗi hệ thống khi lưu câu hỏi");
+    }
+  };
+
+  const handleOpenEdit = (q: Question) => {
+    setEditingQuestionId(q.id);
+    const optA = q.options?.find(o => o.id === 'a')?.content || "";
+    const optB = q.options?.find(o => o.id === 'b')?.content || "";
+    const optC = q.options?.find(o => o.id === 'c')?.content || "";
+    const optD = q.options?.find(o => o.id === 'd')?.content || "";
+
+    setManualForm({
+      content: q.content,
+      optA,
+      optB,
+      optC,
+      optD,
+      correctAnswer: q.correctAnswer,
+      explanation: q.explanation || "",
+      chapterId: q.chapterId,
+      topicId: q.topicId,
+      difficulty: q.difficulty,
+      cognitiveLevel: q.cognitiveLevel,
+      questionType: q.questionType,
+      source: q.source || "",
+    });
+    setShowManualModal(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Bạn có chắc chắn muốn xóa câu hỏi này?")) return;
+    try {
+      const res = await fetch(`/api/tutor/questions/${id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        const result = await res.json();
+        alert(result.message);
+        fetchQuestions();
+      } else {
+        const err = await res.json();
+        alert("Lỗi khi xóa câu hỏi: " + err.error);
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Lỗi hệ thống khi xóa câu hỏi");
+    }
   };
 
   const simulateBulkParse = () => {
@@ -144,7 +290,6 @@ export default function QuestionBankPage() {
       alert("Vui lòng dán câu hỏi vào ô trống!");
       return;
     }
-    // Simulate simple regex splitting
     const questionBlocks = bulkText.split(/(?=Câu\s+\d+\.)/gi).filter((block) => block.trim().length > 0);
     const parsed = questionBlocks.map((block, idx) => {
       const lines = block.split("\n").map(l => l.trim()).filter(l => l.length > 0);
@@ -159,12 +304,47 @@ export default function QuestionBankPage() {
     setBulkPreview(parsed);
   };
 
-  const handleBulkSave = () => {
+  const handleBulkSave = async () => {
     if (!bulkPreview) return;
-    alert(`[MOCK SAVE] Đã mô phỏng lưu ${bulkPreview.length} câu hỏi được bóc tách vào Ngân hàng câu hỏi dưới trạng thái 'NEEDS_REVIEW'.`);
+    
+    let savedCount = 0;
+    for (const p of bulkPreview) {
+      try {
+        const payload = {
+          content: p.content,
+          questionType: "MULTIPLE_CHOICE",
+          options: [
+            { id: "a", label: "A", content: "Lựa chọn A" },
+            { id: "b", label: "B", content: "Lựa chọn B" },
+            { id: "c", label: "C", content: "Lựa chọn C" },
+            { id: "d", label: "D", content: "Lựa chọn D" },
+          ],
+          correctAnswer: p.key.toLowerCase(),
+          explanation: "Lời giải thô được nhập hàng loạt tự động.",
+          subject: "math",
+          grade: "grade-10",
+          chapter: "chap-1",
+          topic: "top-1-1",
+          difficulty: "MEDIUM",
+          cognitiveLevel: "UNDERSTANDING",
+          status: "NEEDS_REVIEW",
+        };
+        const res = await fetch("/api/tutor/questions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (res.ok) savedCount++;
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    
+    alert(`Đã lưu thành công ${savedCount}/${bulkPreview.length} câu hỏi được bóc tách vào Cơ sở dữ liệu dưới trạng thái 'NEEDS_REVIEW'.`);
     setShowBulkModal(false);
     setBulkText("");
     setBulkPreview(null);
+    fetchQuestions();
   };
 
   const getStatusBadge = (status: string) => {
@@ -213,23 +393,39 @@ export default function QuestionBankPage() {
             Ngân hàng câu hỏi Toán 10
           </h2>
           <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>
-            Bộ học liệu và ngân hàng câu hỏi lớp 10 chương trình GDPT 2018 (SAMPLE / MOCK / EDITABLE).
+            Bộ học liệu và ngân hàng câu hỏi lớp 10 chương trình GDPT 2018 (Kết nối Cơ sở dữ liệu).
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link href="/dashboard/tutor/import/bulk-paste">
-            <Button
-              variant="outline"
-              size="sm"
-              className="rounded-xl border-indigo-200 text-indigo-600 hover:bg-indigo-50/50 text-xs font-semibold"
-            >
-              <ClipboardList className="mr-1.5 h-4 w-4" /> Nhập hàng loạt (Paste)
-            </Button>
-          </Link>
           <Button
-            onClick={() => setShowManualModal(true)}
+            onClick={() => setShowBulkModal(true)}
             size="sm"
-            className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-medium shadow-sm text-xs"
+            className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold shadow-sm text-xs border-0 cursor-pointer"
+          >
+            <Sparkles className="mr-1.5 h-4 w-4 text-amber-100 animate-pulse" /> Nhập nhanh câu hỏi (Paste)
+          </Button>
+          <Button
+            onClick={() => {
+              setEditingQuestionId(null);
+              setManualForm({
+                content: "",
+                optA: "",
+                optB: "",
+                optC: "",
+                optD: "",
+                correctAnswer: "a",
+                explanation: "",
+                chapterId: "chap-1",
+                topicId: "top-1-1",
+                difficulty: "medium",
+                cognitiveLevel: "understanding",
+                questionType: "multiple_choice",
+                source: "",
+              });
+              setShowManualModal(true);
+            }}
+            size="sm"
+            className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-medium shadow-sm text-xs border-0 cursor-pointer"
           >
             <Plus className="mr-1.5 h-4 w-4" /> Thêm câu thủ công
           </Button>
@@ -260,7 +456,7 @@ export default function QuestionBankPage() {
                 placeholder="Từ khóa..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-8 pr-3 py-1 text-xs rounded-xl border border-[var(--border-default)] bg-[var(--bg-secondary)]"
+                className="w-full pl-8 pr-3 py-1 text-xs rounded-xl border border border-[var(--border-default)] bg-[var(--bg-secondary)]"
                 style={{ color: "var(--text-primary)" }}
               />
             </div>
@@ -301,8 +497,8 @@ export default function QuestionBankPage() {
                 .filter((t) => chapterFilter === "All" || t.chapterId === chapterFilter)
                 .map((t) => (
                   <option key={t.id} value={t.id}>
-                    {t.name}
-                  </option>
+                    {t.name
+                  }</option>
                 ))}
             </select>
           </div>
@@ -376,60 +572,27 @@ export default function QuestionBankPage() {
         </div>
       </motion.div>
 
-      {/* Bulk actions sticky panel */}
-      {selectedIds.length > 0 && (
-        <motion.div
-          initial={{ y: 50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 50, opacity: 0 }}
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center justify-between gap-4 px-5 py-3 rounded-2xl bg-indigo-900 text-white shadow-xl max-w-lg w-[calc(100%-2rem)]"
-        >
-          <span className="text-xs font-semibold">
-            Đã chọn: <span className="text-indigo-200 font-bold">{selectedIds.length}</span> câu hỏi
-          </span>
-          <div className="flex gap-2">
-            <Button
-              onClick={() => {
-                alert(`Đã mô phỏng nạp ${selectedIds.length} câu hỏi vào trình tạo bài tập!`);
-                setSelectedIds([]);
-              }}
-              size="sm"
-              className="rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 text-xs py-1.5"
-            >
-              Tạo bài tập
-            </Button>
-            <Button
-              onClick={() => setSelectedIds([])}
-              variant="ghost"
-              size="sm"
-              className="rounded-xl text-white/80 hover:text-white hover:bg-white/10 text-xs py-1.5"
-            >
-              Bỏ chọn
-            </Button>
-          </div>
-        </motion.div>
-      )}
-
       {/* Question List rendering */}
       <motion.div variants={item} className="space-y-3">
         <div className="flex items-center justify-between px-2 text-xs text-[var(--text-tertiary)]">
           <span>Tìm thấy <span className="font-semibold text-indigo-500">{filteredQuestions.length}</span> câu hỏi Toán 10</span>
-          <button onClick={toggleSelectAll} className="font-medium text-indigo-500 hover:underline">
+          <button onClick={toggleSelectAll} className="font-medium text-indigo-500 hover:underline cursor-pointer">
             {selectedIds.length === filteredQuestions.length ? "Bỏ chọn tất cả" : "Chọn tất cả"}
           </button>
         </div>
 
-        {filteredQuestions.length === 0 ? (
+        {isLoading ? (
+          <div className="rounded-2xl p-10 text-center flex flex-col items-center justify-center border border-[var(--border-default)] bg-[var(--surface-card)]">
+            <p className="text-xs font-semibold text-[var(--text-secondary)] animate-pulse">
+              Đang tải danh sách câu hỏi từ Cơ sở dữ liệu...
+            </p>
+          </div>
+        ) : filteredQuestions.length === 0 ? (
           <div className="rounded-2xl p-10 text-center flex flex-col items-center justify-center border border-dashed border-[var(--border-subtle)] bg-[var(--surface-card)]">
             <FolderOpen className="h-10 w-10 mb-2 text-[var(--text-tertiary)]" />
             <p className="text-xs font-semibold mb-3.5 text-[var(--text-secondary)]">
               Không tìm thấy câu hỏi Toán 10 nào phù hợp
             </p>
-            <Link href="/dashboard/tutor/import/bulk-paste">
-              <Button size="sm" className="rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-100 text-xs py-1.5 px-3">
-                Nhập câu hỏi từ văn bản thô
-              </Button>
-            </Link>
           </div>
         ) : (
           <div className="space-y-3">
@@ -495,7 +658,7 @@ export default function QuestionBankPage() {
                                         : "border-[var(--border-subtle)] bg-[var(--surface-subtle)]"
                                     }`}
                                   >
-                                    <span className="font-bold mr-1.5">{opt.label}.</span>
+                                    <span className="font-bold mr-1.5">{opt.label || opt.id.toUpperCase()}.</span>
                                     <MathRenderer text={opt.content} />
                                   </div>
                                 ))}
@@ -516,17 +679,6 @@ export default function QuestionBankPage() {
                                 <MathRenderer text={q.explanation} />
                               </p>
                             </div>
-
-                            {q.aiExplanation && (
-                              <div className="p-3.5 rounded-xl bg-indigo-50/50 border border-indigo-100/50 space-y-1.5">
-                                <p className="font-semibold text-indigo-600 flex items-center gap-1">
-                                  <Sparkles className="h-3.5 w-3.5 animate-pulse" /> Trợ lý AI gợi ý:
-                                </p>
-                                <p className="whitespace-pre-line text-indigo-950 leading-relaxed">
-                                  <MathRenderer text={q.aiExplanation} />
-                                </p>
-                              </div>
-                            )}
                           </motion.div>
                         )}
                       </AnimatePresence>
@@ -539,9 +691,24 @@ export default function QuestionBankPage() {
                         </div>
                         <div className="flex items-center gap-3 mt-1 sm:mt-0">
                           {q.source && <span>Nguồn: {q.source}</span>}
+                          
+                          {/* CRUD Action buttons */}
+                          <button
+                            onClick={() => handleOpenEdit(q)}
+                            className="font-bold text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer"
+                          >
+                            Sửa
+                          </button>
+                          <button
+                            onClick={() => handleDelete(q.id)}
+                            className="font-bold text-red-500 hover:text-red-700 hover:underline cursor-pointer"
+                          >
+                            Xóa
+                          </button>
+                          
                           <button
                             onClick={() => setExpandedId(isExpanded ? null : q.id)}
-                            className="font-bold text-indigo-500 flex items-center gap-1 hover:underline text-xs"
+                            className="font-bold text-indigo-500 flex items-center gap-1 hover:underline text-xs cursor-pointer"
                           >
                             {isExpanded ? "Thu gọn" : "Xem lời giải"} {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                           </button>
@@ -556,8 +723,47 @@ export default function QuestionBankPage() {
         )}
       </motion.div>
 
+      {/* Floating Action Bar */}
+      <AnimatePresence>
+        {selectedIds.length > 0 && (
+          <motion.div
+            initial={{ y: 80, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 80, opacity: 0 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 p-4 rounded-2xl shadow-xl flex items-center gap-4 bg-white/95 backdrop-blur border border-indigo-100 max-w-md w-[90%] sm:w-full justify-between text-xs"
+          >
+            <div className="flex items-center gap-2">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-white font-bold text-[10px]">
+                {selectedIds.length}
+              </span>
+              <span className="font-semibold text-[var(--text-secondary)]">Câu hỏi đã chọn</span>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setSelectedIds([])}
+                variant="ghost"
+                size="sm"
+                className="text-[10px] text-red-500 hover:bg-red-50 rounded-xl px-2.5 py-1.5 h-7 cursor-pointer"
+              >
+                Bỏ chọn
+              </Button>
+              <Button
+                onClick={() => {
+                  localStorage.setItem("estudy_selected_question_ids", JSON.stringify(selectedIds));
+                  router.push("/dashboard/tutor/assignments/create");
+                }}
+                size="sm"
+                className="text-[10px] bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold px-3 py-1.5 h-7 cursor-pointer"
+              >
+                Tạo bài tập từ câu đã chọn
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ============================================================
-          MODAL A: MANUAL QUESTION ENTRY MOCK DRAWERS
+          MODAL A: MANUAL QUESTION ENTRY / EDIT FORM
           ============================================================ */}
       <AnimatePresence>
         {showManualModal && (
@@ -570,9 +776,9 @@ export default function QuestionBankPage() {
             >
               <div className="flex justify-between items-center border-b border-[var(--border-subtle)] pb-3">
                 <h3 className="font-bold text-sm text-[var(--text-primary)]">
-                  Thêm câu hỏi thủ công (Toán 10)
+                  {editingQuestionId ? "Chỉnh sửa câu hỏi (Toán 10)" : "Thêm câu hỏi thủ công (Toán 10)"}
                 </h3>
-                <button onClick={() => setShowManualModal(false)} className="text-[var(--text-tertiary)] hover:text-red-500">
+                <button onClick={() => setShowManualModal(false)} className="text-[var(--text-tertiary)] hover:text-red-500 cursor-pointer">
                   <X className="h-5 w-5" />
                 </button>
               </div>
@@ -591,51 +797,66 @@ export default function QuestionBankPage() {
                 </div>
 
                 {/* Multiple choice options */}
-                <div className="grid grid-cols-2 gap-2">
-                  <input
-                    type="text"
-                    placeholder="Lựa chọn A"
-                    value={manualForm.optA}
-                    onChange={(e) => setManualForm(prev => ({ ...prev, optA: e.target.value }))}
-                    className="p-2 rounded-xl border border-[var(--border-default)]"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Lựa chọn B"
-                    value={manualForm.optB}
-                    onChange={(e) => setManualForm(prev => ({ ...prev, optB: e.target.value }))}
-                    className="p-2 rounded-xl border border-[var(--border-default)]"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Lựa chọn C"
-                    value={manualForm.optC}
-                    onChange={(e) => setManualForm(prev => ({ ...prev, optC: e.target.value }))}
-                    className="p-2 rounded-xl border border-[var(--border-default)]"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Lựa chọn D"
-                    value={manualForm.optD}
-                    onChange={(e) => setManualForm(prev => ({ ...prev, optD: e.target.value }))}
-                    className="p-2 rounded-xl border border-[var(--border-default)]"
-                  />
-                </div>
+                {manualForm.questionType === "multiple_choice" && (
+                  <div className="space-y-1.5">
+                    <label className="font-semibold block text-[var(--text-secondary)]">Các phương án trả lời:</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        placeholder="Lựa chọn A"
+                        value={manualForm.optA}
+                        onChange={(e) => setManualForm(prev => ({ ...prev, optA: e.target.value }))}
+                        className="p-2 rounded-xl border border-[var(--border-default)]"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Lựa chọn B"
+                        value={manualForm.optB}
+                        onChange={(e) => setManualForm(prev => ({ ...prev, optB: e.target.value }))}
+                        className="p-2 rounded-xl border border-[var(--border-default)]"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Lựa chọn C"
+                        value={manualForm.optC}
+                        onChange={(e) => setManualForm(prev => ({ ...prev, optC: e.target.value }))}
+                        className="p-2 rounded-xl border border-[var(--border-default)]"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Lựa chọn D"
+                        value={manualForm.optD}
+                        onChange={(e) => setManualForm(prev => ({ ...prev, optD: e.target.value }))}
+                        className="p-2 rounded-xl border border-[var(--border-default)]"
+                      />
+                    </div>
+                  </div>
+                )}
 
                 {/* Correct answer & Type */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <label className="font-semibold text-[var(--text-secondary)]">Đáp án đúng</label>
-                    <select
-                      value={manualForm.correctAnswer}
-                      onChange={(e) => setManualForm(prev => ({ ...prev, correctAnswer: e.target.value }))}
-                      className="w-full p-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-secondary)]"
-                    >
-                      <option value="a">A</option>
-                      <option value="b">B</option>
-                      <option value="c">C</option>
-                      <option value="d">D</option>
-                    </select>
+                    {manualForm.questionType === "multiple_choice" ? (
+                      <select
+                        value={manualForm.correctAnswer}
+                        onChange={(e) => setManualForm(prev => ({ ...prev, correctAnswer: e.target.value }))}
+                        className="w-full p-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-secondary)]"
+                      >
+                        <option value="a">A</option>
+                        <option value="b">B</option>
+                        <option value="c">C</option>
+                        <option value="d">D</option>
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        placeholder="Nhập giá trị đáp án chính xác..."
+                        value={manualForm.correctAnswer}
+                        onChange={(e) => setManualForm(prev => ({ ...prev, correctAnswer: e.target.value }))}
+                        className="w-full p-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-secondary)]"
+                      />
+                    )}
                   </div>
 
                   <div className="space-y-1">
@@ -657,7 +878,7 @@ export default function QuestionBankPage() {
                     <label className="font-semibold text-[var(--text-secondary)]">Chương / Mạch kiến thức</label>
                     <select
                       value={manualForm.chapterId}
-                      onChange={(e) => setManualForm(prev => ({ ...prev, chapterId: e.target.value }))}
+                      onChange={(e) => setManualForm(prev => ({ ...prev, chapterId: e.target.value, topicId: "All" }))}
                       className="w-full p-2 rounded-xl border border-[var(--border-default)] bg-[var(--bg-secondary)]"
                     >
                       {sampleChapters.map((ch) => (
@@ -738,15 +959,15 @@ export default function QuestionBankPage() {
                     type="button"
                     onClick={() => setShowManualModal(false)}
                     variant="outline"
-                    className="rounded-xl border-[var(--border-default)] text-[var(--text-secondary)]"
+                    className="rounded-xl border-[var(--border-default)] text-[var(--text-secondary)] cursor-pointer"
                   >
                     Hủy bỏ
                   </Button>
                   <Button
                     type="submit"
-                    className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
+                    className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold cursor-pointer"
                   >
-                    Lưu câu hỏi nháp
+                    {editingQuestionId ? "Lưu thay đổi" : "Lưu câu hỏi nháp"}
                   </Button>
                 </div>
               </form>
@@ -771,7 +992,7 @@ export default function QuestionBankPage() {
                 <h3 className="font-bold text-sm text-[var(--text-primary)]">
                   Nhập hàng loạt câu hỏi trắc nghiệm Toán 10 (Paste)
                 </h3>
-                <button onClick={() => setShowBulkModal(false)} className="text-[var(--text-tertiary)] hover:text-red-500">
+                <button onClick={() => setShowBulkModal(false)} className="text-[var(--text-tertiary)] hover:text-red-500 cursor-pointer">
                   <X className="h-5 w-5" />
                 </button>
               </div>
@@ -796,7 +1017,7 @@ Lời giải: ...
                   />
                   <Button
                     onClick={simulateBulkParse}
-                    className="w-full rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
+                    className="w-full rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold cursor-pointer"
                   >
                     Chạy thử bóc tách (Parse)
                   </Button>
@@ -836,9 +1057,9 @@ Lời giải: Thay tọa độ ta thấy đỉnh là gốc tọa độ.`}
                       </div>
                       <Button
                         onClick={handleBulkSave}
-                        className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-1.5"
+                        className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-1.5 cursor-pointer"
                       >
-                        Lưu vào Ngân hàng câu hỏi
+                        Lưu vào Cơ sở dữ liệu
                       </Button>
                     </div>
                   )}

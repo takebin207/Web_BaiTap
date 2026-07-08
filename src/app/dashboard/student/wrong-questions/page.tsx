@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   AlertTriangle,
@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { questionBank, studentAttempts } from "@/data/mock/data";
 import MathRenderer from "@/components/ui/math-renderer";
 
 const container = {
@@ -29,8 +28,27 @@ export default function StudentWrongQuestionsPage() {
   const [selectedAsgnId, setSelectedAsgnId] = useState("All");
   const [expandedQId, setExpandedQId] = useState<string | null>(null);
 
-  // Filter attempts
-  const gradedAttempts = studentAttempts.filter((att) => att.status === "graded");
+  const [attempts, setAttempts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAttempts = async () => {
+      try {
+        const res = await fetch("/api/student/attempts");
+        if (res.ok) {
+          const data = await res.json();
+          setAttempts(data);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchAttempts();
+  }, []);
+
+  const gradedAttempts = attempts;
 
   // Collect wrong questions
   const wrongAnswersList = gradedAttempts.flatMap((att) => {
@@ -38,10 +56,10 @@ export default function StudentWrongQuestionsPage() {
       return [];
     }
 
-    const wrongAnswers = att.answers.filter((ans) => !ans.isCorrect);
+    const wrongAnswers = att.answers.filter((ans: any) => !ans.isCorrect);
 
-    return wrongAnswers.flatMap((ans) => {
-      const q = questionBank.find((question) => question.id === ans.questionId);
+    return wrongAnswers.flatMap((ans: any) => {
+      const q = ans.question;
       if (!q) return [];
       return [
         {
@@ -56,6 +74,16 @@ export default function StudentWrongQuestionsPage() {
   const handlePracticeSimilar = () => {
     alert("Đang mô phỏng tự sinh bài tập tương đương từ ngân hàng Toán 10!");
   };
+
+  if (isLoading) {
+    return (
+      <div className="rounded-2xl p-12 text-center flex flex-col items-center justify-center border border-[var(--border-default)] bg-[var(--surface-card)]">
+        <p className="text-xs font-semibold text-[var(--text-secondary)] animate-pulse">
+          Đang tải danh sách câu hỏi làm sai...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <motion.div variants={container} initial="hidden" animate="visible" className="space-y-6">
@@ -117,8 +145,9 @@ export default function StudentWrongQuestionsPage() {
         ) : (
           wrongAnswersList.map(({ question, selectedAnswer, assignmentTitle }) => {
             const isExpanded = expandedQId === question.id;
-            const selectedOpt = question.options?.find((o) => o.id === selectedAnswer);
-            const correctOpt = question.options?.find((o) => o.id === question.correctAnswer);
+            const options = (question.options as any[]) || [];
+            const selectedOpt = options.find((o: any) => o.id === selectedAnswer);
+            const correctOpt = options.find((o: any) => o.id === question.correctAnswer);
 
             return (
               <div

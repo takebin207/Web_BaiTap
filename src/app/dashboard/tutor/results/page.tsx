@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   CheckSquare,
@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { recentSubmissions } from "@/data/mock/data";
+import { getLocalStorageAttempts } from "@/data/mock/store";
 
 const container = {
   hidden: { opacity: 0 },
@@ -27,8 +28,22 @@ const item = {
 export default function TutorResultsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [attempts] = useState(() => getLocalStorageAttempts());
 
-  const filteredSubmissions = recentSubmissions.filter((sub) => {
+  const mappedSubmissions = useMemo(() => {
+    const list = attempts.map((att) => ({
+      id: att.id,
+      studentName: att.studentName,
+      assignmentTitle: att.assignmentTitle,
+      submittedAt: att.submittedAt || new Date().toISOString(),
+      score: att.score,
+      totalScore: att.totalQuestions,
+      status: att.status === "graded" ? ("graded" as const) : ("submitted" as const),
+    }));
+    return list.length > 0 ? list : recentSubmissions;
+  }, [attempts]);
+
+  const filteredSubmissions = mappedSubmissions.filter((sub) => {
     const matchesSearch =
       sub.studentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       sub.assignmentTitle.toLowerCase().includes(searchQuery.toLowerCase());

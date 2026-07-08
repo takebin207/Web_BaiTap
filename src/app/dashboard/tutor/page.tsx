@@ -25,6 +25,11 @@ import {
   sampleChapters,
 } from "@/data/mock/data";
 import MathRenderer from "@/components/ui/math-renderer";
+import {
+  getLocalStorageAssignments,
+  getLocalStorageAttempts,
+} from "@/data/mock/store";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 
 const container = {
@@ -38,8 +43,25 @@ const item = {
 };
 
 export default function TutorDashboard() {
-  const activeAssignments = mockAssignments.filter((a) => a.status === "active");
-  const urgentSubmissions = recentSubmissions.filter((s) => s.status === "submitted");
+  const [assignments] = useState(() => getLocalStorageAssignments());
+  const [attempts] = useState(() => getLocalStorageAttempts());
+
+  const activeAssignments = assignments.filter((a) => a.status === "active");
+
+  const mappedSubmissions = useMemo(() => {
+    const list = attempts.map((att) => ({
+      id: att.id,
+      studentName: att.studentName,
+      assignmentTitle: att.assignmentTitle,
+      submittedAt: att.submittedAt || new Date().toISOString(),
+      score: att.score,
+      totalScore: att.totalQuestions,
+      status: att.status === "graded" ? ("graded" as const) : ("submitted" as const),
+    }));
+    return list.length > 0 ? list : recentSubmissions;
+  }, [attempts]);
+
+  const urgentSubmissions = mappedSubmissions.filter((s) => s.status === "submitted");
   const aiReview = aiReviewSummaries[0];
 
   return (
@@ -51,22 +73,117 @@ export default function TutorDashboard() {
           <h2 className="text-2xl font-bold sm:text-3xl">
             Chào mừng trở lại, {currentTutor.name}! 👋
           </h2>
-          <p className="mt-2 text-white/80 text-sm max-w-xl">
-            Hệ thống phân tích EStudy đã ghi nhận kết quả làm bài mới. 
-            <strong> Xem học sinh sai gì — chuẩn bị nội dung dạy học buổi sau tối ưu nhất.</strong>
+          <p className="mt-2 text-white/85 text-xs sm:text-sm max-w-xl leading-relaxed">
+            🎯 <strong>EStudy giúp giáo viên nắm được học sinh đã làm sai những gì để chuẩn bị cho buổi học tiếp theo một cách hiệu quả nhất.</strong> Hệ thống tự động chấm điểm, khoanh vùng lỗ hổng kiến thức và đề xuất giáo án ôn tập buổi sau.
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Link href="/dashboard/tutor/assignments/create">
-              <Button size="sm" className="rounded-xl bg-white text-indigo-600 border-none hover:bg-white/90 font-medium">
+              <Button size="sm" className="rounded-xl bg-white text-indigo-600 border-none hover:bg-white/90 font-medium cursor-pointer">
                 <Plus className="mr-1.5 h-4 w-4" /> Tạo bài tập mới
               </Button>
             </Link>
             <Link href="/dashboard/tutor/wrong-questions">
-              <Button size="sm" className="rounded-xl bg-white/20 text-white border-white/20 backdrop-blur hover:bg-white/30 font-medium">
+              <Button size="sm" className="rounded-xl bg-white/20 text-white border-white/20 backdrop-blur hover:bg-white/30 font-medium cursor-pointer">
                 <AlertTriangle className="mr-1.5 h-4 w-4" /> Xem câu học sinh sai
               </Button>
             </Link>
+            <Link href="/dashboard/tutor/import/bulk-paste">
+              <Button size="sm" className="rounded-xl bg-white/20 text-white border-white/20 backdrop-blur hover:bg-white/30 font-medium cursor-pointer">
+                📝 Nhập nhanh câu hỏi (Paste)
+              </Button>
+            </Link>
           </div>
+        </div>
+      </motion.div>
+
+      {/* Onboarding Core Workflow Stepper */}
+      <motion.div
+        variants={item}
+        className="rounded-2xl p-5 border border-indigo-100 bg-gradient-to-r from-indigo-50/20 via-slate-50/50 to-indigo-50/10 space-y-4 text-xs"
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h3 className="text-xs font-bold text-indigo-700 uppercase tracking-wider flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5" /> Quy trình giảng dạy EStudy
+            </h3>
+            <p className="text-[10px] text-[var(--text-tertiary)] mt-0.5">
+              Hoàn thành chặng đường ôn luyện của lớp học chỉ với 3 bước đơn giản.
+            </p>
+          </div>
+          <Badge className="bg-indigo-100 text-indigo-800 border-indigo-200 self-start sm:self-center text-[9px] font-semibold px-2 py-0.5">
+            Toán Học 10
+          </Badge>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+          {/* Step 1 */}
+          <Link href="/dashboard/tutor/import/bulk-paste" className="block group">
+            <div
+              className="rounded-xl p-4 border border-[var(--border-default)] bg-white hover:border-indigo-300 hover:shadow-md transition-all duration-200 h-full flex flex-col justify-between cursor-pointer space-y-3"
+            >
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 font-bold text-[10px] border border-indigo-100">
+                    1
+                  </span>
+                  <Badge variant="secondary" className="text-[9px] bg-slate-100 text-slate-700">Nhập đề thô</Badge>
+                </div>
+                <h4 className="font-bold text-[var(--text-primary)] group-hover:text-indigo-600 transition-colors">Soạn câu hỏi nhanh</h4>
+                <p className="text-[10px] text-[var(--text-tertiary)] leading-relaxed">
+                  Copy-paste đề Toán từ Word/PDF vào khung nhập thô. Hệ thống tự động tách câu hỏi, đáp án & lời giải chi tiết.
+                </p>
+              </div>
+              <span className="text-[10px] text-indigo-650 font-semibold group-hover:translate-x-1 inline-flex items-center gap-1 mt-2 transition-transform">
+                Nhập câu hỏi ngay →
+              </span>
+            </div>
+          </Link>
+
+          {/* Step 2 */}
+          <Link href="/dashboard/tutor/question-bank" className="block group">
+            <div
+              className="rounded-xl p-4 border border-[var(--border-default)] bg-white hover:border-indigo-300 hover:shadow-md transition-all duration-200 h-full flex flex-col justify-between cursor-pointer space-y-3"
+            >
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 font-bold text-[10px] border border-indigo-100">
+                    2
+                  </span>
+                  <Badge variant="secondary" className="text-[9px] bg-slate-100 text-slate-700">Tạo đề thi</Badge>
+                </div>
+                <h4 className="font-bold text-[var(--text-primary)] group-hover:text-indigo-600 transition-colors">Tạo bài tập & Giao lớp</h4>
+                <p className="text-[10px] text-[var(--text-tertiary)] leading-relaxed">
+                  Chọn câu hỏi từ Ngân hàng đề, thiết lập thời gian làm bài, hạn chót và phát hành trực tuyến cho lớp Toán 10.
+                </p>
+              </div>
+              <span className="text-[10px] text-indigo-650 font-semibold group-hover:translate-x-1 inline-flex items-center gap-1 mt-2 transition-transform">
+                Vào Ngân hàng đề →
+              </span>
+            </div>
+          </Link>
+
+          {/* Step 3 */}
+          <Link href="/dashboard/tutor/wrong-questions" className="block group">
+            <div
+              className="rounded-xl p-4 border border-[var(--border-default)] bg-white hover:border-indigo-300 hover:shadow-md transition-all duration-200 h-full flex flex-col justify-between cursor-pointer space-y-3"
+            >
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 font-bold text-[10px] border border-indigo-100">
+                    3
+                  </span>
+                  <Badge variant="secondary" className="text-[9px] bg-amber-50 text-amber-700 border-amber-100">AI Review</Badge>
+                </div>
+                <h4 className="font-bold text-[var(--text-primary)] group-hover:text-indigo-600 transition-colors">Xem phân tích câu sai</h4>
+                <p className="text-[10px] text-[var(--text-tertiary)] leading-relaxed">
+                  Xem chi tiết các câu học sinh làm sai nhiều, các chủ đề học sinh yếu và nhận giáo án ôn tập đề xuất bởi AI.
+                </p>
+              </div>
+              <span className="text-[10px] text-indigo-650 font-semibold group-hover:translate-x-1 inline-flex items-center gap-1 mt-2 transition-transform">
+                Xem báo cáo câu sai →
+              </span>
+            </div>
+          </Link>
         </div>
       </motion.div>
 
@@ -289,7 +406,7 @@ export default function TutorDashboard() {
               Bài nộp gần đây
             </h3>
             <div className="space-y-3">
-              {[...urgentSubmissions, ...recentSubmissions.filter((s) => s.status === "graded")].slice(0, 4).map((sub) => (
+              {[...urgentSubmissions, ...mappedSubmissions.filter((s) => s.status === "graded")].slice(0, 4).map((sub) => (
                 <div key={sub.id} className="flex items-center gap-3">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white gradient-bg">
                     {getInitials(sub.studentName)}
